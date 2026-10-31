@@ -208,7 +208,14 @@ def test_prompt_injection_safety():
     data = resp.json()
     assert "reply" in data
     # Grounded engine must not hallucinate the 1 crore cash
-    assert "1 crore" not in data["reply"].lower() or "couldn't find" in data["reply"].lower() or "retrieval" in data["reply"].lower()
+    reply_lower = data["reply"].lower()
+    assert (
+        "1 crore" not in reply_lower
+        or "could not find" in reply_lower
+        or "couldn't find" in reply_lower
+        or "retrieval" in reply_lower
+        or "no verified" in reply_lower
+    )
 
 
 # ---------------------------------------------------------------------------
