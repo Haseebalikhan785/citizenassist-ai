@@ -82,6 +82,17 @@ export const Login: React.FC = () => {
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEmail('citizen@citizenassist.local');
+              setPassword('CitizenDemo2026!');
+            }}
+            className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition border border-slate-200"
+          >
+            Fill Demo Citizen Credentials
+          </button>
         </form>
 
         <div className="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-500">

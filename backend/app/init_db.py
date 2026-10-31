@@ -55,7 +55,34 @@ def init():
             print("[✓] Admin account configured from environment variables")
         elif is_production:
             print("[i] Admin creation disabled: ADMIN_PASSWORD environment variable not set")
+
+        # Ensure demo citizen account is always available
+        demo_citizen_email = "citizen@citizenassist.local"
+        demo_citizen_pass = os.getenv("CITIZEN_PASSWORD", "CitizenDemo2026!")
+        citizen = db.query(User).filter(User.email == demo_citizen_email).first()
+        if not citizen:
+            citizen = User(
+                email=demo_citizen_email,
+                hashed_password=hash_password(demo_citizen_pass),
+                full_name="Rajesh Kumar",
+                role="citizen",
+                language_preference="en",
+                profile_data={
+                    "age": 20,
+                    "state": "Punjab",
+                    "annual_family_income": 200000,
+                    "occupation": "student",
+                    "category": "SC",
+                    "gender": "male",
+                },
+            )
+            db.add(citizen)
+            db.commit()
+            print("[✓] Demo Citizen account created")
         else:
+            print("[✓] Demo Citizen account verified")
+
+        if not is_production and not admin_pass:
             # Local development fallback only
             admin_pass = secrets.token_urlsafe(12)
             demo_citizen_email = "citizen@citizenassist.local"
