@@ -24,15 +24,14 @@ All resources below were created specifically for this deployment and tagged wit
 
 ---
 
-## 2. CloudFront Status & Live Routing Note
+## 2. HTTPS Security & Live Production Endpoints
 
-During distribution creation, AWS returned:  
-`Your account must be verified before you can add new CloudFront resources. To verify your account, please contact AWS Support.`
-
-In accordance with our resilient architectural fallback plan, the platform routes directly to the dedicated Elastic IP:
-- **Live Website Address:** **[http://13.203.181.152](http://13.203.181.152)**
-- **Health Check Endpoint:** `http://13.203.181.152/api/health`
-- **Cookie Security:** Configured with `COOKIE_SECURE=false` so session cookies function over standard HTTP.
+The website is fully secured with **HTTPS (TLSv1.3)** using containerized reverse proxy with automatic Let's Encrypt certificates:
+- **Live Secure Website:** **[https://13-203-181-152.sslip.io](https://13-203-181-152.sslip.io)**
+- **HTTP Auto-Redirect:** Any plain HTTP access to `http://13.203.181.152` returns an automatic `301 Moved Permanently` redirect to the secure HTTPS endpoint.
+- **Health Check Endpoint:** `https://13-203-181-152.sslip.io/api/health`
+- **Cookie Security:** Configured with `COOKIE_SECURE=true` (`SameSite=lax; HttpOnly; Secure`) protecting citizen and administrator session tokens.
+- **Port 443 Inbound:** Enabled on Security Group `sg-0b30cea46a352dc6b`, tagged with `Project=citizenassist`.
 
 ---
 

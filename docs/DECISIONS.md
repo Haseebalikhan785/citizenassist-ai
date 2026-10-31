@@ -48,4 +48,9 @@
 **Decision**: Route live traffic directly to the dedicated Elastic IP (`http://13.203.181.152`) with `COOKIE_SECURE=false` when CloudFront distribution creation is blocked pending AWS Support account verification.
 **Reason**: Brief specifies that if CloudFront is blocked for the AWS account, fallback to plain HTTP on the Elastic IP with clear notice, ensuring the platform remains 100% accessible and demo-ready for evaluators without stalling.
 
+## Decision 14: Automated Production HTTPS via Caddy and Let's Encrypt with sslip.io
+**Decision**: Provision genuine Let's Encrypt TLS certificates using Caddy running in containerized reverse-proxy mode on EC2 for `13-203-181-152.sslip.io` (with auto-redirect from HTTP port 80 to HTTPS), enabling `COOKIE_SECURE=true`.
+**Reason**: While AWS CloudFront was blocked by AWS Support pending manual new-account verification, the user explicitly requested HTTPS security. Using Caddy with `sslip.io` automatically solves ACME TLS challenges, delivers real production SSL trusted by all modern browsers and mobile devices, sets `Secure; HttpOnly; SameSite=lax` cookies, and permanently redirects unencrypted HTTP traffic to HTTPS at $0.00 extra cost.
+
+
 

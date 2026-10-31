@@ -56,9 +56,26 @@ COMMAND_ID=$(aws ssm send-command \
     "docker build -t citizenassist:latest .",
     "docker stop citizenassist 2>/dev/null || true",
     "docker rm citizenassist 2>/dev/null || true",
-    "docker run -d --name citizenassist --restart unless-stopped -p 80:8000 --env-file /etc/citizenassist.env -v /var/lib/citizenassist/data:/app/data citizenassist:latest",
+    "docker run -d --name citizenassist --restart unless-stopped -p 127.0.0.1:8000:8000 --env-file /etc/citizenassist.env -v /var/lib/citizenassist/data:/app/data citizenassist:latest",
+    "mkdir -p /etc/caddy /var/lib/caddy/data /var/lib/caddy/config",
+    "if [ ! -f /etc/caddy/Caddyfile ]; then cat << \"EOF\" > /etc/caddy/Caddyfile
+{
+    email haseebalikhan785@gmail.com
+}
+13-203-181-152.sslip.io {
+    reverse_proxy 127.0.0.1:8000
+}
+13.203.181.152.nip.io {
+    reverse_proxy 127.0.0.1:8000
+}
+http://13.203.181.152 {
+    redir https://13-203-181-152.sslip.io{uri} permanent
+}
+EOF
+    fi",
+    "if ! docker ps | grep -q caddy; then docker stop caddy 2>/dev/null || true; docker rm caddy 2>/dev/null || true; docker run -d --name caddy --restart unless-stopped --network host -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile -v /var/lib/caddy/data:/data -v /var/lib/caddy/config:/config caddy:alpine; fi",
     "sleep 6",
-    "curl -s http://127.0.0.1/api/health"
+    "curl -s http://127.0.0.1:8000/api/health"
   ]' \
   --region "$REGION" \
   --query "Command.CommandId" \
@@ -78,7 +95,8 @@ while true; do
     if [ "$STATUS" == "Success" ]; then
         echo "============================================================"
         echo "  DEPLOYMENT SUCCESSFUL!"
-        echo "  Live Website: http://$PUBLIC_IP"
+        echo "  Live Website (HTTPS): https://13-203-181-152.sslip.io"
+        echo "  HTTP Redirect:        http://$PUBLIC_IP -> HTTPS"
         echo "============================================================"
         break
     elif [ "$STATUS" == "Failed" ] || [ "$STATUS" == "Cancelled" ]; then

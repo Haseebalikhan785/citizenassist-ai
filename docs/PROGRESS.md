@@ -98,3 +98,9 @@
   - `demo_check.py`: 100% stage readiness in English and Punjabi with active Gemini AI
   - Playwright E2E browser journey: 13/13 steps passed on desktop (1280x800) and mobile (390px iPhone width) with 0 page runtime errors
 - [x] Documentation complete: `docs/AWS_RESOURCES.md`, updated `docs/DEPLOYMENT.md`, updated `README.md`
+- [x] Production HTTPS TLSv1.3 enabled:
+  - Inbound Port 443 authorized on Security Group `sg-0b30cea46a352dc6b` (tagged `Project=citizenassist`)
+  - Containerized Caddy reverse-proxy automatically manages Let's Encrypt certificates for `13-203-181-152.sslip.io`
+  - Permanent 301 redirect from HTTP port 80 to HTTPS
+  - `COOKIE_SECURE=true` enabled in SSM Parameter Store with `HttpOnly; SameSite=lax; Secure` flags
+  - Live HTTPS verified: `https://13-203-181-152.sslip.io`
