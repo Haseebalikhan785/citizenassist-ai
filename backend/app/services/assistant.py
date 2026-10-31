@@ -303,7 +303,7 @@ GREETING_PATTERN = re.compile(
     r"^(hi|hello|hey|hola|namaste|namaskar|namaskaram|pranam|sat\s*sri\s*akal|ssa|kiddan|ram\s*ram|adaab|"
     r"good\s*(morning|afternoon|evening|day)|"
     r"help|who\s*are\s*you|what\s*can\s*you\s*do|how\s*can\s*you\s*help(\s*me)?|"
-    r"ਤੁਸੀਂ\s*ਕੌਣ\s*ਹੋ|ਕਿਵੇਂ\s*ਹੋ|ਕੀ\s*ਹਾਲ\s*ਹੈ|"
+    r"ਸਤਿ\s*ਸ੍ਰੀ\s*ਅਕਾਲ|ਸਤਿ\s*ਸ਼੍ਰੀ\s*ਅਕਾਲ|ਹੈਲੋ|ਕਿੱਦਾਂ|ਤੁਸੀਂ\s*ਕੌਣ\s*ਹੋ|ਕਿਵੇਂ\s*ਹੋ|ਕੀ\s*ਹਾਲ\s*ਹੈ|"
     r"आप\s*कौन\s*हैं|नमस्ते|नमस्कार|सत\s*श्री\s*अकाल)[\s!.,?]*$",
     re.IGNORECASE,
 )
