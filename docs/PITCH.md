@@ -36,7 +36,7 @@ By orchestrating **Hybrid RAG**, **Multilingual NLP (English, Hindi, Punjabi)**,
 
 ### A. Retrieval-Augmented Generation (Hybrid RAG)
 * **Keyword Tier (100% Offline):** SQLite FTS5 with BM25 ranking across structured chunk sections (eligibility, benefits, documents, application procedure). Runs instantly even with zero internet or missing API key.
-* **Semantic Tier (Dense Retrieval):** Multilingual embeddings via Google Gemini `text-embedding-004` and in-memory cosine similarity.
+* **Semantic Tier (Dense Retrieval):** Multilingual embeddings via Google Gemini Embeddings (`gemini-embedding-001`) and in-memory cosine similarity.
 * **Reciprocal Rank Fusion (RRF):** Combines keyword and semantic scores to retrieve the most pertinent policy chunks without hallucination.
 
 ### B. Multilingual Natural Language Processing (NLP)

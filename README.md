@@ -58,7 +58,7 @@ In India, hundreds of Central and State welfare programs exist to uplift student
 ### The Three Required AI Techniques:
 1. **Hybrid RAG:**
    - **Offline / Keyword Search:** Powered by SQLite FTS5 virtual tables with BM25 ranking. Guarantees 100% functionality even without an active internet connection or API key.
-   - **Dense Semantic Retrieval:** Powered by Google Gemini `text-embedding-004` and in-memory cosine similarity across structured chunk sections (eligibility, benefits, documents, procedure).
+   - **Dense Semantic Retrieval:** Powered by Google Gemini Embeddings (`gemini-embedding-001`) and in-memory cosine similarity across structured chunk sections (eligibility, benefits, documents, procedure).
 2. **Multilingual NLP:**
    - Native interface support for **English**, **Hindi (हिंदी)**, and **Punjabi (ਪੰਜਾਬੀ)**.
    - Dynamic prompt adaptation that allows mixed-language queries while keeping official scheme nomenclature intact.
@@ -71,8 +71,8 @@ In India, hundreds of Central and State welfare programs exist to uplift student
 ## 💻 Tech Stack
 * **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Lucide Icons, React Router DOM.
 * **Backend:** Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy 2.x, SQLite (WAL mode + FTS5), Uvicorn.
-* **AI & NLP:** Google GenAI SDK (`from google import genai`), Argon2-cffi, PyJWT, PyMuPDF.
-* **Testing:** Pytest, Pytest-Asyncio, HTTPX (43 automated test cases covering auth, security, and RAG).
+* **AI & NLP:** Official Google GenAI SDK (`google-genai`, `from google import genai`), Argon2-cffi, PyJWT, PyMuPDF.
+* **Testing:** Pytest, Pytest-Asyncio, HTTPX, Playwright (66 automated test cases covering auth, security, eligibility boundaries, prompt injection, and live RAG).
 
 ---
 

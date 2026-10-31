@@ -32,9 +32,9 @@
 
 ### Step 2: Grounded Assistant & Natural Language Discovery (0:30 - 1:30)
 * **Action:** Click **"AI Assistant"** (AI ਸਹਾਇਕ).
-* **Action:** Click the button **"Use Sample Demo Profile"** (or type):
-  > *"ਮੈਂ ਪੰਜਾਬ ਤੋਂ 20 ਸਾਲਾ ਐੱਸ.ਸੀ. ਵਿਦਿਆਰਥੀ ਹਾਂ ਅਤੇ ਪਰਿਵਾਰਕ ਆਮਦਨ 2 ਲੱਖ ਹੈ।"*  
-  *(English equivalent: "I am a 20-year-old SC student from Punjab with family income of 2 lakh.")*
+* **Action:** Click the button **"Use demo profile"** (or **"ਡੈਮੋ ਪ੍ਰੋਫਾਈਲ ਵਰਤੋ"** / **"डेमो प्रोफ़ाइल का उपयोग करें"**), or type:
+  > *"ਮੈਂ ਪੰਜਾਬ ਤੋਂ 20 ਸਾਲਾ ਐੱਸ.ਸੀ. ਵਿਦਿਆਰਥੀ ਹਾਂ ਅਤੇ ਮੇਰੇ ਪਰਿਵਾਰ ਦੀ ਸਾਲਾਨਾ ਆਮਦਨ 2 ਲੱਖ ਰੁਪਏ ਹੈ।"*  
+  *(English equivalent: "I am a 20-year-old SC student from Punjab with a family income of 2 lakh. What schemes can I apply for?")*
 * **Observation to Show Judges:**
   1. **"What I Understood" Profile Panel:** Show how the system extracted:
      - `Age: 20`

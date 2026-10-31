@@ -72,8 +72,9 @@
   - Multilingual profile extraction for English, Hindi (Devanagari), and Punjabi (Gurmukhi) without ASCII `\b` word boundary failures
   - Schema validation guaranteeing zero hallucinated fields outside `ALLOWED_PROFILE_FIELDS`
 - [x] **Verification**:
-  - 66 backend pytest tests passing (65 passed, 1 skipped live API test)
-  - Frontend TypeScript build: 0 errors
+  - 66 of 66 backend pytest tests passing (100% pass rate, including live Gemini API integration)
+  - Frontend TypeScript build: 0 errors (`npm run build`)
+  - Playwright E2E browser demo journey: 13/13 steps passed, 0 page errors, 0 console errors (Desktop 1280x800 and Mobile 390px iPhone width)
   - `scripts/smoke_test.py`: 100% pass
-  - `scripts/demo_check.py`: 100% stage-ready in English and Punjabi
+  - `scripts/demo_check.py`: 100% stage-ready in English and Punjabi (Gemini AI active)
   - `scripts/check_links.py`: 11 of 12 government portals verified with 200 OK
