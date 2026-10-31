@@ -150,14 +150,38 @@ Return a valid JSON object matching this schema:
 }}
 """
 
-        response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.1,
-            ),
-        )
+        candidate_models = list(dict.fromkeys([
+            settings.GEMINI_MODEL,
+            "gemini-3.5-flash-lite",
+            "gemini-flash-lite-latest",
+            "gemini-3.1-flash-lite",
+            "gemini-3-flash-preview",
+            "gemini-3.5-flash",
+        ]))
+
+        response = None
+        last_error = None
+        for model_name in candidate_models:
+            if not model_name:
+                continue
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.1,
+                    ),
+                )
+                if response and response.text:
+                    break
+            except Exception as m_err:
+                last_error = m_err
+                logger.warning("Extraction with model %s failed: %s. Trying fallback model...", model_name, m_err)
+                continue
+
+        if not response or not response.text:
+            raise RuntimeError(f"All extraction models failed. Last error: {last_error}")
 
         data = json.loads(response.text)
         data["verification_status"] = "draft"

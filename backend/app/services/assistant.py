@@ -298,6 +298,86 @@ def sanitize_untrusted_text(text: str) -> str:
     return clean
 
 
+# Pattern for detecting conversational greetings or introductory prompts
+GREETING_PATTERN = re.compile(
+    r"^(hi|hello|hey|hola|namaste|namaskar|namaskaram|pranam|sat\s*sri\s*akal|ssa|kiddan|ram\s*ram|adaab|"
+    r"good\s*(morning|afternoon|evening|day)|"
+    r"help|who\s*are\s*you|what\s*can\s*you\s*do|how\s*can\s*you\s*help(\s*me)?|"
+    r"ਤੁਸੀਂ\s*ਕੌਣ\s*ਹੋ|ਕਿਵੇਂ\s*ਹੋ|ਕੀ\s*ਹਾਲ\s*ਹੈ|"
+    r"आप\s*कौन\s*हैं|नमस्ते|नमस्कार|सत\s*श्री\s*अकाल)[\s!.,?]*$",
+    re.IGNORECASE,
+)
+
+
+def is_greeting_or_intro(query: str, extracted_profile: dict[str, Any]) -> bool:
+    """Returns True if the query is a simple greeting or introductory question."""
+    cleaned = query.strip()
+    if not cleaned:
+        return True
+    # If the user provided detailed profile attributes in this query, do not treat as pure greeting
+    if extracted_profile:
+        return False
+    return bool(GREETING_PATTERN.match(cleaned))
+
+
+def get_greeting_response(
+    session_id: str,
+    language: str = "en",
+    profile: dict[str, Any] | None = None,
+) -> ChatResponse:
+    """Generates an informative, warm introductory response guiding the citizen."""
+    if language == "hi":
+        reply = (
+            "नमस्ते! मैं **CitizenAssist AI** हूँ — भारत सरकार और राज्य सरकारों की कल्याणकारी योजनाओं और नागरिक सेवाओं के लिए आपका मार्गदर्शक।\n\n"
+            "मैं आपकी इस प्रकार सहायता कर सकता हूँ:\n"
+            "• **पात्र योजनाएँ खोजना:** छात्रवृत्ति, किसान सहायता, सामाजिक पेंशन, कौशल विकास और स्वास्थ्य लाभ।\n"
+            "• **पात्रता और दस्तावेज़:** आवेदन करने के लिए आवश्यक पात्रता शर्तें और ज़रूरी कागज़ात।\n"
+            "• **आधिकारिक पोर्टल्स:** आवेदन और स्थिति की जाँच के लिए सीधे आधिकारिक सरकारी लिंक।\n\n"
+            "आप सीधे अपनी स्थिति लिखकर पूछ सकते हैं, उदाहरण के लिए:\n"
+            "• *\"मैं पंजाब का 20 वर्षीय SC छात्र हूँ, पारिवारिक आय ₹2 लाख है। मेरे लिए कौन सी योजनाएँ हैं?\"*\n"
+            "• *\"जाति प्रमाण पत्र (Caste Certificate) के लिए क्या दस्तावेज़ चाहिए?\"*\n"
+            "• *\"PM-KISAN योजना की पात्रता और लाभ क्या हैं?\"*"
+        )
+    elif language == "pa":
+        reply = (
+            "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ **CitizenAssist AI** ਹਾਂ — ਕੇਂਦਰ ਅਤੇ ਪੰਜਾਬ ਸਰਕਾਰ ਦੀਆਂ ਭਲਾਈ ਸਕੀਮਾਂ ਅਤੇ ਨਾਗਰਿਕ ਸੇਵਾਵਾਂ ਲਈ ਤੁਹਾਡਾ ਸਹਾਇਕ।\n\n"
+            "ਮੈਂ ਤੁਹਾਡੀ ਇਸ ਤਰ੍ਹਾਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ:\n"
+            "• **ਯੋਗ ਸਕੀਮਾਂ ਲੱਭਣਾ:** ਪੜ੍ਹਾਈ ਵਜ਼ੀਫ਼ੇ, ਕਿਸਾਨ ਸਹਾਇਤਾ, ਬੁਢਾਪਾ ਪੈਨਸ਼ਨ, ਹੁਨਰ ਵਿਕਾਸ ਆਦਿ।\n"
+            "• **ਦਸਤਾਵੇਜ਼ ਚੈੱਕਲਿਸਟ:** ਅਰਜ਼ੀ ਦੇਣ ਲਈ ਲੋੜੀਂਦੇ ਜ਼ਰੂਰੀ ਕਾਗਜ਼ਾਤ ਅਤੇ ਯੋਗਤਾ ਸ਼ਰਤਾਂ।\n"
+            "• **ਅਧਿਕਾਰਤ ਪੋਰਟਲ:** ਸਰਕਾਰੀ ਵੈੱਬਸਾਈਟਾਂ ਦੇ ਤਸਦੀਕਸ਼ੁਦਾ ਲਿੰਕ।\n\n"
+            "ਤੁਸੀਂ ਇਸ ਤਰ੍ਹਾਂ ਪੁੱਛ ਸਕਦੇ ਹੋ:\n"
+            "• *\"ਮੈਂ ਪੰਜਾਬ ਦਾ 20 ਸਾਲਾ ਐਸ.ਸੀ. ਵਿਦਿਆਰਥੀ ਹਾਂ, ਆਮਦਨ ₹2 ਲੱਖ ਹੈ। ਕਿਹੜੀਆਂ ਸਕੀਮਾਂ ਹਨ?\"*\n"
+            "• *\"ਜਾਤੀ ਸਰਟੀਫਿਕੇਟ ਬਣਾਉਣ ਲਈ ਕਿਹੜੇ ਦਸਤਾਵੇਜ਼ ਚਾਹੀਦੇ ਹਨ?\"*\n"
+            "• *\"ਪੀ.ਐੱਮ. ਕਿਸਾਨ ਯੋਜਨਾ ਦੇ ਲਾਭ ਅਤੇ ਯੋਗਤਾ ਕੀ ਹਨ?\"*"
+        )
+    else:
+        reply = (
+            "Hello! I am **CitizenAssist AI**, your grounded navigator for Indian government schemes and citizen services.\n\n"
+            "I can assist you with:\n"
+            "• **Discovering Welfare Schemes:** Scholarships, farmer support, pensions, healthcare, and skill development.\n"
+            "• **Eligibility & Checklists:** Instant checks against official eligibility criteria and required documents.\n"
+            "• **Official Links:** Verified links to official central and state portals.\n\n"
+            "Try asking questions like:\n"
+            "• *\"I am a 20-year-old SC student in Punjab with family income of ₹2 Lakh. What schemes can I apply for?\"*\n"
+            "• *\"What documents are required for an SC/ST Caste Certificate in Punjab?\"*\n"
+            "• *\"Tell me about PM-KISAN benefits and eligibility.\"*"
+        )
+
+    return ChatResponse(
+        reply=reply,
+        session_id=session_id,
+        claims=[],
+        suggested_records=[],
+        profile_extracted=profile,
+        steps=AssistantStepInfo(
+            understood=profile or {},
+            retrieved=[],
+            assessed=[],
+            method="greeting_orientation",
+        ),
+    )
+
+
 def enforce_grounded_wording(text: str) -> str:
     """
     Enforces that assistant answers never say the user IS definitely approved.
@@ -354,10 +434,17 @@ def build_retrieval_only_response(
     suggested_ids: list[str] = []
     assessed_info: list[dict[str, Any]] = []
 
-    lines = [
-        "Here are verified government schemes and services found in our database (Retrieval-Only Mode):",
-        ""
-    ]
+    has_meaningful_profile = bool(
+        profile and any(profile.get(k) for k in ["age", "category", "annual_family_income", "occupation", "state"])
+    )
+
+    if language == "hi":
+        lines = ["आधिकारिक सरकारी डेटाबेस के आधार पर, आपके प्रश्न से संबंधित सत्यापित योजनाएँ और सेवाएँ:"]
+    elif language == "pa":
+        lines = ["ਸਰਕਾਰੀ ਡਾਟਾਬੇਸ ਦੇ ਆਧਾਰ 'ਤੇ, ਤੁਹਾਡੇ ਸਵਾਲ ਨਾਲ ਸੰਬੰਧਿਤ ਤਸਦੀਕਸ਼ੁਦਾ ਸਕੀਮਾਂ ਅਤੇ ਸੇਵਾਵਾਂ:"]
+    else:
+        lines = ["Based on verified government records in our database, here are the most relevant schemes and services:"]
+    lines.append("")
 
     for idx, item in enumerate(results[:3], 1):
         record = db.query(Record).filter(Record.id == item.record_id).first()
@@ -367,7 +454,7 @@ def build_retrieval_only_response(
 
         eligibility_summary = ""
         eval_res = None
-        if profile:
+        if has_meaningful_profile:
             eval_res = evaluate_eligibility(record.id, profile, db)
             assessed_info.append({
                 "record_id": record.id,
@@ -376,14 +463,15 @@ def build_retrieval_only_response(
                 "message": eval_res.message,
             })
             if eval_res.overall_status == "eligible":
-                eligibility_summary = " (Status: May be eligible based on criteria - confirm on official portal)"
+                eligibility_summary = " — *May be eligible based on stated profile (confirm on portal)*"
             elif eval_res.overall_status == "not_eligible":
-                eligibility_summary = " (Status: Not eligible based on known criteria)"
+                eligibility_summary = " — *May not meet all criteria*"
             else:
-                eligibility_summary = " (Status: Insufficient information)"
+                eligibility_summary = " — *Check criteria on official portal*"
 
         lines.append(f"• **{record.name}** ({record.category}){eligibility_summary}")
-        lines.append(f"  {record.description or ''}")
+        if record.description:
+            lines.append(f"  {record.description}")
         if record.benefits:
             lines.append(f"  *Benefits:* {record.benefits}")
         if record.application_url:
@@ -401,7 +489,7 @@ def build_retrieval_only_response(
             )
         )
 
-    lines.append("*Note: AI answers are currently off. Add a GEMINI_API_KEY in .env for natural conversation and deep citations.*")
+    lines.append("*All information is derived directly from verified official government records.*")
     reply = "\n".join(lines)
 
     return ChatResponse(
@@ -435,6 +523,16 @@ async def execute_agentic_chat(
     extracted_profile = extract_profile_from_text(query)
     merged_profile = dict(user_profile or {})
     merged_profile.update(extracted_profile)
+
+    # Conversational greeting & guidance check:
+    # If the user is simply saying hello or asking for general help/orientation without a specific query,
+    # greet them politely with helpful guidance and sample prompts instead of querying database records.
+    if is_greeting_or_intro(query, extracted_profile):
+        return get_greeting_response(
+            session_id=session_id,
+            language=language,
+            profile=merged_profile,
+        )
 
     # STEP 2: Retrieve (hybrid search)
     search_results, _ = hybrid_search(query=query, db=db, top_k=5)
@@ -602,15 +700,44 @@ Respond strictly in valid JSON adhering to this exact schema:
 
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-        response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                response_mime_type="application/json",
-                temperature=0.2,
-            ),
-        )
+        # Multi-model fallback cascade: ensures resilience if any model hits quota (429) or transient errors (503)
+        candidate_models = list(dict.fromkeys([
+            settings.GEMINI_MODEL,
+            "gemini-3.5-flash-lite",
+            "gemini-flash-lite-latest",
+            "gemini-3.1-flash-lite",
+            "gemini-3-flash-preview",
+            "gemini-3.5-flash",
+        ]))
+
+        response = None
+        last_error = None
+        used_model = None
+
+        for model_name in candidate_models:
+            if not model_name:
+                continue
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=user_prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        response_mime_type="application/json",
+                        temperature=0.2,
+                    ),
+                )
+                if response and response.text:
+                    used_model = model_name
+                    logger.info("Generated assistant response using model: %s", used_model)
+                    break
+            except Exception as m_err:
+                last_error = m_err
+                logger.warning("Gemini model %s failed: %s. Trying next candidate...", model_name, m_err)
+                continue
+
+        if not response or not response.text:
+            raise RuntimeError(f"All Gemini models in cascade failed. Last error: {last_error}")
 
         data = json.loads(response.text)
 

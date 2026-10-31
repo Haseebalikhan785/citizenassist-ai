@@ -199,3 +199,38 @@ def test_profile_extraction_district():
     assert p.get("state") == "Punjab"
     assert p.get("goal") == "scholarship"
     assert p.get("occupation") == "student"
+
+
+# ---------------------------------------------------------------------------
+# Greeting & Orientation Tests
+# ---------------------------------------------------------------------------
+
+def test_greeting_detection():
+    from backend.app.services.assistant import get_greeting_response, is_greeting_or_intro
+
+    # Plain greetings should return True
+    assert is_greeting_or_intro("hi", {}) is True
+    assert is_greeting_or_intro("hello", {}) is True
+    assert is_greeting_or_intro("Hey!", {}) is True
+    assert is_greeting_or_intro("namaste", {}) is True
+    assert is_greeting_or_intro("Sat Sri Akal", {}) is True
+    assert is_greeting_or_intro("what can you do?", {}) is True
+    assert is_greeting_or_intro("help", {}) is True
+
+    # Queries with actual content or profile data should return False
+    extracted_profile = extract_profile_from_text("I am 20 years old student from Punjab")
+    assert is_greeting_or_intro("I am 20 years old student from Punjab", extracted_profile) is False
+    assert is_greeting_or_intro("What are PM-KISAN benefits?", {}) is False
+
+    # Responses should be well-formed with method 'greeting_orientation'
+    resp_en = get_greeting_response("sess-1", language="en")
+    assert "CitizenAssist AI" in resp_en.reply
+    assert resp_en.steps.method == "greeting_orientation"
+
+    resp_hi = get_greeting_response("sess-2", language="hi")
+    assert "नमस्ते" in resp_hi.reply
+    assert resp_hi.steps.method == "greeting_orientation"
+
+    resp_pa = get_greeting_response("sess-3", language="pa")
+    assert "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ" in resp_pa.reply
+    assert resp_pa.steps.method == "greeting_orientation"
