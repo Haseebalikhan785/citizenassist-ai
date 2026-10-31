@@ -1,0 +1,120 @@
+{
+  "app": {
+    "name": "CitizenAssist AI",
+    "tagline": "Government Services. Simplified for Everyone.",
+    "subtitle": "Intelligent Public Service Navigator",
+    "hackathon": "GRAVITON 2026 Hackathon"
+  },
+  "nav": {
+    "home": "Home",
+    "schemes": "Schemes & Services",
+    "assistant": "AI Assistant",
+    "eligibility": "Eligibility Checker",
+    "compare": "Compare",
+    "dashboard": "Dashboard",
+    "admin": "Admin Panel",
+    "about": "About",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "hero": {
+    "headline": "Government Benefits Shouldn't Be Difficult to Find.",
+    "subtext": "Discover government schemes, understand your eligibility, and get application guidance in your preferred language — all in one place.",
+    "cta_primary": "Explore Government Schemes",
+    "cta_secondary": "Ask CitizenAssist"
+  },
+  "categories": {
+    "title": "Browse by Category",
+    "education": "Education and Scholarships",
+    "agriculture": "Agriculture and Farmers",
+    "healthcare": "Healthcare",
+    "employment": "Employment",
+    "financial": "Financial Assistance",
+    "women_child": "Women and Child Welfare",
+    "housing": "Housing",
+    "social_security": "Social Security",
+    "services": "Other Citizen Services"
+  },
+  "how_it_works": {
+    "title": "How CitizenAssist Works",
+    "step1_title": "1. Tell Us About You",
+    "step1_desc": "Describe yourself in English, Hindi, or Punjabi, or browse schemes by category.",
+    "step2_title": "2. Clear Eligibility",
+    "step2_desc": "See transparent rule-by-rule eligibility checks with citations to official sources.",
+    "step3_title": "3. Prepare & Apply",
+    "step3_desc": "Generate personalized document checklists and visit genuine official government portals."
+  },
+  "trust": {
+    "title": "Trust, Transparency & Data Integrity",
+    "point1_title": "Zero Hallucination Guarantee",
+    "point1_desc": "We never invent criteria, grants, or deadlines. Every single fact comes with its official government source excerpt.",
+    "point2_title": "Deterministic Rules",
+    "point2_desc": "Eligibility decisions are computed strictly by audited rules, not by random generative guessing.",
+    "point3_title": "Independent & Unaffiliated",
+    "point3_desc": "CitizenAssist AI is an independent student innovation project created for GRAVITON 2026. Always confirm on official government portals."
+  },
+  "record": {
+    "scheme": "Welfare Scheme",
+    "service": "Citizen Service",
+    "benefits": "Key Benefits",
+    "eligibility": "Eligibility Criteria",
+    "documents": "Required Documents",
+    "procedure": "How to Apply",
+    "apply_button": "Apply on Official Portal",
+    "official_source": "Official Source",
+    "last_verified": "Verified on",
+    "demo_badge": "DEMO DATA",
+    "verified_badge": "VERIFIED DATA",
+    "check_eligibility": "Check My Eligibility",
+    "open_checklist": "Document Checklist",
+    "compare": "Add to Compare",
+    "source_excerpt": "Official Source Excerpt"
+  },
+  "eligibility": {
+    "title": "Deterministic Eligibility Checker",
+    "subtitle": "Clear, rule-level eligibility breakdown with official citations",
+    "age": "Age (years)",
+    "state": "State of Residence",
+    "income": "Annual Family Income (₹)",
+    "income_lakh": "Income in Lakhs (e.g., 2.5 for ₹2,50,000)",
+    "occupation": "Occupation / Status",
+    "category": "Social Category",
+    "gender": "Gender",
+    "student": "Are you currently a student?",
+    "check_now": "Check Eligibility",
+    "status_eligible": "Potentially Eligible - further verification required",
+    "status_not_eligible": "Not Eligible based on known criteria",
+    "status_unknown": "Insufficient Information - please complete profile fields",
+    "criteria_met": "MET",
+    "criteria_not_met": "NOT MET",
+    "criteria_unknown": "UNKNOWN",
+    "disclaimer": "This is an automated guidance tool and does not guarantee government approval. Final eligibility is determined by official authorities."
+  },
+  "checklist": {
+    "title": "Document Preparation Checklist",
+    "subtitle": "Mark documents you already possess and find where to obtain missing ones",
+    "ready_count": "{{ready}} of {{total}} documents ready",
+    "print_button": "Print / Save as PDF",
+    "have_document": "I have this document",
+    "missing_document": "Missing - Action Needed",
+    "where_to_get": "Where to obtain this document:"
+  },
+  "assistant": {
+    "title": "Multilingual Grounded Assistant",
+    "welcome": "Namaste! I can help you discover government schemes and services, check your eligibility, and prepare documents in English, Hindi, or Punjabi.",
+    "placeholder": "e.g., I am a 20-year-old SC student in Punjab with family income of 2 lakh. What schemes can I apply for?",
+    "send": "Ask Assistant",
+    "demo_button": "Use Sample Demo Profile",
+    "understood_title": "What I Understood (Editable Profile):",
+    "confirm_profile": "Apply Profile to Assistant",
+    "ai_off_banner": "AI answers are currently in Retrieval-Only mode. Set GEMINI_API_KEY in .env to enable full generative responses.",
+    "citations_title": "Sources & Grounded Citations:",
+    "recommended_title": "Recommended Schemes & Services:"
+  },
+  "footer": {
+    "disclaimer": "CitizenAssist AI is an independent hackathon innovation for GRAVITON 2026 (Problem Statement #11). Not affiliated with or endorsed by the Government of India. Always confirm criteria and apply exclusively on official government portals (.gov.in / .nic.in).",
+    "copyright": "CitizenAssist AI Navigator"
+  }
+}

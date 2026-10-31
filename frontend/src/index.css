@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Gurmukhi:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #0A1628;
+  --color-navy-light: #1A2744;
+  --color-royal: #1E40AF;
+  --color-royal-light: #3B82F6;
+  --color-surface: #F8FAFC;
+  --color-surface-dark: #F1F5F9;
+  --color-eligible: #059669;
+  --color-not-eligible: #DC2626;
+  --color-unknown: #D97706;
+  --font-sans: 'Inter', 'Noto Sans Devanagari', 'Noto Sans Gurmukhi', system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
