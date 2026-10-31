@@ -62,6 +62,9 @@ COMMAND_ID=$(aws ssm send-command \
 {
     email haseebalikhan785@gmail.com
 }
+ai-2.duckdns.org {
+    reverse_proxy 127.0.0.1:8000
+}
 13-203-181-152.sslip.io {
     reverse_proxy 127.0.0.1:8000
 }
@@ -69,7 +72,7 @@ COMMAND_ID=$(aws ssm send-command \
     reverse_proxy 127.0.0.1:8000
 }
 http://13.203.181.152 {
-    redir https://13-203-181-152.sslip.io{uri} permanent
+    redir https://ai-2.duckdns.org{uri} permanent
 }
 EOF
     fi",
@@ -95,7 +98,8 @@ while true; do
     if [ "$STATUS" == "Success" ]; then
         echo "============================================================"
         echo "  DEPLOYMENT SUCCESSFUL!"
-        echo "  Live Website (HTTPS): https://13-203-181-152.sslip.io"
+        echo "  Live Website (HTTPS): https://ai-2.duckdns.org"
+        echo "  Fallback Domain:      https://13-203-181-152.sslip.io"
         echo "  HTTP Redirect:        http://$PUBLIC_IP -> HTTPS"
         echo "============================================================"
         break

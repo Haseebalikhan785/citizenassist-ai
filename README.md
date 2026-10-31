@@ -3,7 +3,7 @@
 > **"Government Services. Simplified for Everyone."**  
 > Built for **GRAVITON 2026** (CGC University, Mohali) — **Problem Statement #11**  
 > 
-> 🔒 **Live Secure Website (HTTPS):** **[https://13-203-181-152.sslip.io](https://13-203-181-152.sslip.io)** *(HTTP auto-redirects to HTTPS)*  
+> 🔒 **Live Secure Website (HTTPS):** **[https://ai-2.duckdns.org](https://ai-2.duckdns.org)** *(or [https://13-203-181-152.sslip.io](https://13-203-181-152.sslip.io))*  
 > 🌐 **Elastic IP:** `13.203.181.152` (AWS `ap-south-1` Mumbai)  
 > 🐙 **GitHub Repository:** **[https://github.com/Haseebalikhan785/citizenassist-ai](https://github.com/Haseebalikhan785/citizenassist-ai)**
 
