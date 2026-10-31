@@ -1,7 +1,10 @@
 # CitizenAssist AI: Intelligent Public Service Navigator
 
 > **"Government Services. Simplified for Everyone."**  
-> Built for **GRAVITON 2026** (CGC University, Mohali) — **Problem Statement #11**
+> Built for **GRAVITON 2026** (CGC University, Mohali) — **Problem Statement #11**  
+> 
+> 🌐 **Live Website (AWS Mumbai):** **[http://13.203.181.152](http://13.203.181.152)**  
+> 🐙 **GitHub Repository:** **[https://github.com/Haseebalikhan785/citizenassist-ai](https://github.com/Haseebalikhan785/citizenassist-ai)**
 
 ---
 

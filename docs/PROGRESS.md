@@ -78,3 +78,23 @@
   - `scripts/smoke_test.py`: 100% pass
   - `scripts/demo_check.py`: 100% stage-ready in English and Punjabi (Gemini AI active)
   - `scripts/check_links.py`: 11 of 12 government portals verified with 200 OK
+
+## Milestone 6 - AWS CLOUD DEPLOYMENT & GITHUB (ap-south-1 Mumbai)
+- [x] GitHub private repository published: `https://github.com/Haseebalikhan785/citizenassist-ai` with tags `milestone-1` through `milestone-4`
+- [x] Multi-stage production `Dockerfile` (Node 20 + Python 3.12 slim, linux/amd64) and `.dockerignore`
+- [x] Security scanning: git history and working tree clean of secrets and tokens
+- [x] AWS Infrastructure created in `ap-south-1` (Mumbai) tagged `Project=citizenassist`:
+  - EC2 `t3.small` instance (`i-0906416126aee904e`) with Amazon Linux 2023 (`ami-0f19324397f53458f`)
+  - 20 GB encrypted `gp3` root EBS volume + 2 GB swap space
+  - Elastic IP `13.203.181.152` attached
+  - Security group with zero SSH (port 22 closed), port 80 open for web traffic
+  - Private encrypted S3 deployment bucket (`citizenassist-deploy-287872994029-ap-south-1`)
+  - IAM instance role with `AmazonSSMManagedInstanceCore` and scoped parameter access
+  - AWS SSM Parameter Store parameters under `/citizenassist/*` (SecureString keys and configuration)
+  - AWS Budget alert (\$21.00/mo cap, 50% and 100% threshold notifications to `haseebalikhan785@gmail.com`)
+- [x] Deployment automation: `scripts/aws_deploy.sh` and `scripts/aws_teardown.sh`
+- [x] Live cloud verification against `http://13.203.181.152`:
+  - `smoke_test.py`: 100% pass across all API routes and frontend SPA
+  - `demo_check.py`: 100% stage readiness in English and Punjabi with active Gemini AI
+  - Playwright E2E browser journey: 13/13 steps passed on desktop (1280x800) and mobile (390px iPhone width) with 0 page runtime errors
+- [x] Documentation complete: `docs/AWS_RESOURCES.md`, updated `docs/DEPLOYMENT.md`, updated `README.md`

@@ -31,7 +31,7 @@ from playwright.sync_api import sync_playwright
 SCREENSHOTS_DIR = ROOT / "docs" / "screenshots"
 SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = sys.argv[1] if len(sys.argv) > 1 else os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
 
 def load_credentials():

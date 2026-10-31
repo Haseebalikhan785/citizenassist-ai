@@ -3,10 +3,11 @@ Smoke test script for CitizenAssist AI.
 Checks that all endpoints respond properly on the running server at http://localhost:8000.
 """
 
+import os
 import sys
 import httpx
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = sys.argv[1] if len(sys.argv) > 1 else os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
 
 def run_smoke_test():

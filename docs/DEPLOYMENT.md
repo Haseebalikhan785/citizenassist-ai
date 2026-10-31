@@ -4,6 +4,20 @@ CitizenAssist AI is architected with a **single-process production mode** where 
 
 ---
 
+## ☁️ Live Cloud Deployment (AWS ap-south-1 Mumbai)
+
+CitizenAssist AI is deployed live on AWS:
+- **Live Public URL:** **[http://13.203.181.152](http://13.203.181.152)**
+- **Health Check:** `http://13.203.181.152/api/health`
+- **Region:** `ap-south-1` (Mumbai)
+- **Infrastructure:** EC2 `t3.small` instance (`i-0906416126aee904e`), encrypted 20 GB gp3 root volume, Elastic IP (`13.203.181.152`), Docker container with mounted data volume (`/var/lib/citizenassist/data:/app/data`), managed exclusively via AWS Systems Manager (SSM) with zero open inbound SSH ports.
+- **SSM Parameter Store:** Settings stored under `/citizenassist/*`.
+- **Redeployment:** Run `./scripts/aws_deploy.sh` to build and redeploy.
+- **Teardown:** Run `./scripts/aws_teardown.sh` to release all resources after hackathon evaluation.
+- **Full Details:** See [docs/AWS_RESOURCES.md](file:///Users/haseeb/Haseeb/Graviton%20Project/docs/AWS_RESOURCES.md).
+
+---
+
 ## 🖥️ Primary Path: Local Deployment (Recommended for Hackathons)
 
 The primary and most robust way to run CitizenAssist AI is locally on your computer:

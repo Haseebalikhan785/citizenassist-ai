@@ -40,7 +40,12 @@
 **Decision**: Only evaluate rules with `is_approved == True` in the deterministic engine. Records with zero approved rules return `"Insufficient information - eligibility rules not yet extracted"`. Rules of `kind == "document"` are strictly non-blocking.
 **Reason**: BUILD_BRIEF.md Section 7 mandates that LLMs may only propose draft rules during ingestion, and admins must review/approve before execution. Documents require physical/procedural verification and must never falsely report a citizen as ineligible.
 
-## Decision 11: Citation Validation and Untrusted Data Delimiters
-**Decision**: Post-process assistant claims with a dedicated `validate_citations()` step that strips hallucinated source IDs and downgrades unverified claims to `inferred` or `missing`. Wrap retrieved documents in escaped `<retrieved_document>` tags treated strictly as inert data.
-**Reason**: Guarantees zero hallucinations and prevents prompt-injection attacks from overriding deterministic engine findings or inventing welfare claims.
+## Decision 12: AWS Deployment with Systems Manager and Zero Inbound SSH
+**Decision**: Manage the production EC2 instance exclusively through AWS Systems Manager (Run Command & Session Manager) with Port 22 (SSH) completely closed in the Security Group.
+**Reason**: Closes the primary attack vector against public cloud servers. Secrets and configurations are delivered via SSM Parameter Store directly to root-only memory on the server without committing credentials or distributing SSH keys.
+
+## Decision 13: Direct Elastic IP Routing Fallback for CloudFront Account Verification
+**Decision**: Route live traffic directly to the dedicated Elastic IP (`http://13.203.181.152`) with `COOKIE_SECURE=false` when CloudFront distribution creation is blocked pending AWS Support account verification.
+**Reason**: Brief specifies that if CloudFront is blocked for the AWS account, fallback to plain HTTP on the Elastic IP with clear notice, ensuring the platform remains 100% accessible and demo-ready for evaluators without stalling.
+
 

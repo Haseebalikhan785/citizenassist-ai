@@ -10,10 +10,11 @@ Run this script before going on stage to verify:
 7. Punjabi sample question returns grounded citations
 """
 
+import os
 import sys
 import httpx
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = sys.argv[1] if len(sys.argv) > 1 else os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
 
 def run_demo_check():
@@ -24,7 +25,7 @@ def run_demo_check():
 
     issues = 0
 
-    with httpx.Client(base_url=BASE_URL, timeout=12.0, follow_redirects=True) as client:
+    with httpx.Client(base_url=BASE_URL, timeout=30.0, follow_redirects=True) as client:
         # 1. Server & Health
         try:
             resp = client.get("/api/health")
