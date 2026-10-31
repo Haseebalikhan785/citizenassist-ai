@@ -10,6 +10,7 @@ from backend.app.core.database import get_db
 from backend.app.core.security import (
     create_access_token,
     get_current_user,
+    get_current_user_optional,
     hash_password,
     verify_password,
 )
@@ -88,9 +89,11 @@ def logout(response: Response):
     return {"message": "Logged out successfully"}
 
 
-@router.get("/me", response_model=UserResponse)
-def me(current_user: User = Depends(get_current_user)):
-    """Get the currently authenticated user."""
+@router.get("/me", response_model=UserResponse | None)
+def me(current_user: User | None = Depends(get_current_user_optional)):
+    """Get the currently authenticated user, or null if guest."""
+    if not current_user:
+        return None
     return UserResponse.model_validate(current_user)
 
 
