@@ -31,6 +31,11 @@ if [ "$CONFIRM" != "yes" ]; then
     exit 0
 fi
 
+if ! aws sts get-caller-identity --region "$REGION" > /dev/null 2>&1; then
+    echo "Session expired or not logged in. Launching 'aws login'..."
+    aws login
+fi
+
 echo ""
 echo "[1/8] Terminating EC2 Instance ($INSTANCE_ID)..."
 aws ec2 terminate-instances --instance-ids "$INSTANCE_ID" --region "$REGION" > /dev/null 2>&1 || true

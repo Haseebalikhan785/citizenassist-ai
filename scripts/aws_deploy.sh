@@ -23,7 +23,10 @@ fi
 
 # 2. Check Identity
 echo "[1/4] Verifying AWS credentials..."
-aws sts get-caller-identity --region "$REGION" > /dev/null
+if ! aws sts get-caller-identity --region "$REGION" > /dev/null 2>&1; then
+    echo "Session expired or not logged in. Launching 'aws login'..."
+    aws login
+fi
 
 # 3. Create deploy archive
 echo "[2/4] Creating deployment archive from git..."
