@@ -40,6 +40,19 @@ ALLOWED_PROFILE_FIELDS = {
     "goal",
 }
 
+_DAILY_AI_CALLS: dict[str, int] = {}
+
+
+def check_and_increment_daily_ai_cap() -> bool:
+    """Returns True if within daily cap, False if cap exceeded."""
+    from datetime import datetime, timezone
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    current = _DAILY_AI_CALLS.get(today, 0)
+    if current >= settings.DAILY_AI_CALL_CAP:
+        return False
+    _DAILY_AI_CALLS[today] = current + 1
+    return True
+
 
 def extract_profile_from_text(message: str) -> dict[str, Any]:
     """
@@ -572,6 +585,18 @@ Respond strictly in valid JSON adhering to this exact schema:
 """
 
     try:
+        if not check_and_increment_daily_ai_cap():
+            logger.warning("Daily AI call cap reached (%d calls). Falling back to retrieval-only mode.", settings.DAILY_AI_CALL_CAP)
+            fallback = build_retrieval_only_response(
+                query=query,
+                results=search_results,
+                db=db,
+                profile=merged_profile,
+                language=language,
+            )
+            fallback.session_id = session_id
+            return fallback
+
         from google import genai
         from google.genai import types
 

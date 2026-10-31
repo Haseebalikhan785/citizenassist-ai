@@ -13,6 +13,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from backend.app.core.config import settings
 from backend.app.core.database import Base, engine
@@ -60,6 +61,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Trust forwarded proxy headers (for CloudFront / Reverse Proxies)
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 # Security Headers Middleware
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

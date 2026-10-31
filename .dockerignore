@@ -1,0 +1,44 @@
+# Git & GitHub
+.git
+.github
+.gitignore
+
+# Environment & Credentials (NEVER include in Docker image)
+.env
+*.env
+*.env.local
+LOCAL_CREDENTIALS.txt
+.aws
+
+# Virtual environments & node modules
+venv/
+.venv/
+backend/venv/
+node_modules/
+frontend/node_modules/
+
+# Local databases and uploads
+data/*.db
+data/*.db-*
+data/*.db-shm
+data/*.db-wal
+data/uploads/
+uploads/
+
+# Build artifacts & caches
+frontend/dist/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+__pycache__/
+*.pyc
+*.pyo
+
+# Documentation artifacts & screenshots
+docs/screenshots/
+*.log
+.DS_Store
+deploy_bundle.tar.gz

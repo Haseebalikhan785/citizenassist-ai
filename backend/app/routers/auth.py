@@ -6,6 +6,7 @@ Tokens are stored in httpOnly cookies for security.
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
+from backend.app.core.config import settings
 from backend.app.core.database import get_db
 from backend.app.core.security import (
     create_access_token,
@@ -48,7 +49,7 @@ def register(data: UserCreate, response: Response, db: Session = Depends(get_db)
         value=token,
         httponly=True,
         samesite="lax",
-        secure=False,  # Allow http on localhost
+        secure=settings.COOKIE_SECURE,
         max_age=86400,
     )
     return TokenResponse(access_token=token, token_type="bearer", user=UserResponse.model_validate(user))
@@ -76,7 +77,7 @@ def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
         value=token,
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=settings.COOKIE_SECURE,
         max_age=86400,
     )
     return TokenResponse(access_token=token, token_type="bearer", user=UserResponse.model_validate(user))
@@ -85,7 +86,12 @@ def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
 @router.post("/logout")
 def logout(response: Response):
     """Log out user by clearing the auth cookie."""
-    response.delete_cookie(key="access_token")
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        samesite="lax",
+        secure=settings.COOKIE_SECURE,
+    )
     return {"message": "Logged out successfully"}
 
 
