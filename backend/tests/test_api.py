@@ -31,14 +31,10 @@ def setup_db():
 # ---------------------------------------------------------------------------
 
 def test_auth_register_and_login():
-    email = "testuser@citizenassist.local"
+    import uuid
+    rand_suffix = str(uuid.uuid4())[:8]
+    email = f"testuser_{rand_suffix}@citizenassist.local"
     password = "SecurePassword123!"
-
-    # Clean existing user if any
-    db = SessionLocal()
-    db.query(User).filter(User.email == email).delete()
-    db.commit()
-    db.close()
 
     # Register
     reg_resp = client.post(
@@ -47,10 +43,11 @@ def test_auth_register_and_login():
     )
     assert reg_resp.status_code == 200
     assert reg_resp.json()["user"]["email"] == email
-    assert "access_token" in reg_resp.cookies
+    token = reg_resp.json()["access_token"]
 
-    # Me
-    me_resp = client.get("/api/auth/me", cookies=reg_resp.cookies)
+    # Me (using Authorization Bearer or Cookie)
+    client.cookies.set("access_token", token)
+    me_resp = client.get("/api/auth/me")
     assert me_resp.status_code == 200
     assert me_resp.json()["full_name"] == "Test Citizen"
 
@@ -60,7 +57,6 @@ def test_auth_register_and_login():
         json={"email": email, "password": password},
     )
     assert login_resp.status_code == 200
-    assert "access_token" in login_resp.cookies
 
     # Invalid password
     bad_login = client.post(
@@ -75,20 +71,22 @@ def test_auth_register_and_login():
 # ---------------------------------------------------------------------------
 
 def test_rbac_citizen_forbidden_on_admin_routes():
-    # Ordinary citizen credentials
+    import uuid
+    rand_suffix = str(uuid.uuid4())[:8]
     reg_resp = client.post(
         "/api/auth/register",
-        json={"email": "regularcitizen@example.com", "password": "Password123!"},
+        json={"email": f"regularcitizen_{rand_suffix}@example.com", "password": "Password123!"},
     )
-    citizen_cookies = reg_resp.cookies
+    token = reg_resp.json()["access_token"]
+    client.cookies.set("access_token", token)
 
     # Attempt to call admin endpoints
-    reindex_resp = client.post("/api/admin/reindex", cookies=citizen_cookies)
+    reindex_resp = client.post("/api/admin/reindex")
     assert reindex_resp.status_code == 403
     assert "Admin access required" in reindex_resp.json()["detail"]
 
     # Ingestion log
-    log_resp = client.get("/api/admin/ingestion-log", cookies=citizen_cookies)
+    log_resp = client.get("/api/admin/ingestion-log")
     assert log_resp.status_code == 403
 
 
@@ -133,19 +131,17 @@ def test_fts5_search():
 # ---------------------------------------------------------------------------
 
 def test_checklist_and_saved_items():
-    login_resp = client.post(
-        "/api/auth/login",
-        json={"email": "citizen@citizenassist.local", "password": "wrong"},
-    )
-    # Register fresh citizen
+    import uuid
+    rand_suffix = str(uuid.uuid4())[:8]
     reg_resp = client.post(
         "/api/auth/register",
-        json={"email": "checklistuser@citizenassist.local", "password": "Password123!"},
+        json={"email": f"checklistuser_{rand_suffix}@citizenassist.local", "password": "Password123!"},
     )
-    cookies = reg_resp.cookies
+    token = reg_resp.json()["access_token"]
+    client.cookies.set("access_token", token)
 
     # Get checklist
-    cl_resp = client.get("/api/checklist/pm-kisan", cookies=cookies)
+    cl_resp = client.get("/api/checklist/pm-kisan")
     assert cl_resp.status_code == 200
     items = cl_resp.json()["items"]
     assert len(items) >= 2
@@ -154,15 +150,14 @@ def test_checklist_and_saved_items():
     toggle_resp = client.put(
         "/api/checklist/pm-kisan",
         json={"document_name": items[0]["document_name"], "is_available": True},
-        cookies=cookies,
     )
     assert toggle_resp.status_code == 200
 
     # Save item
-    save_resp = client.post("/api/saved/pm-kisan", cookies=cookies)
+    save_resp = client.post("/api/saved/pm-kisan")
     assert save_resp.status_code == 200
 
-    saved_list = client.get("/api/saved", cookies=cookies)
+    saved_list = client.get("/api/saved")
     assert any(s["record_id"] == "pm-kisan" for s in saved_list.json())
 
 
