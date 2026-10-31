@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Sparkles,
   Send,
@@ -13,12 +14,67 @@ import {
   HelpCircle,
   Clock,
   RotateCcw,
+  FileText,
+  CheckCircle2,
 } from 'lucide-react';
 import { api } from '../utils/api';
-import { AssistantStepInfo, ChatClaim, ChatResponse } from '../types';
+import { AssistantStepInfo, ChatClaim, ChatResponse, SchemeRecord } from '../types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../i18n';
+
+const AI_SKILLS = [
+  {
+    id: 'eligibility',
+    label: '⚡ Eligibility Audit',
+    query: (lang: string) =>
+      lang === 'pa'
+        ? 'ਮੇਰੇ ਮੌਜੂਦਾ ਪ੍ਰੋਫਾਈਲ ਦੇ ਆਧਾਰ ਤੇ ਸਾਰੀਆਂ ਯੋਗ ਸਕੀਮਾਂ ਦਾ ਪੂਰਾ ਯੋਗਤਾ ਨਿਰੀਖਣ ਕਰੋ।'
+        : lang === 'hi'
+        ? 'मेरी वर्तमान प्रोफ़ाइल के आधार पर सभी योजनाओं के लिए मेरी पूर्ण पात्रता की विस्तृत जाँच करें।'
+        : 'Perform a comprehensive eligibility audit across all schemes for my current profile, specifying met and unmet criteria.',
+  },
+  {
+    id: 'checklist',
+    label: '📋 Document Checklist',
+    query: (lang: string) =>
+      lang === 'pa'
+        ? 'ਮੇਰੇ ਲਈ ਯੋਗ ਸਕੀਮਾਂ ਲਈ ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼ਾਂ ਅਤੇ ਸਰਟੀਫਿਕੇਟਾਂ ਦੀ ਪੂਰੀ ਚੈੱਕਲਿਸਟ ਤਿਆਰ ਕਰੋ।'
+        : lang === 'hi'
+        ? 'मेरी पात्र योजनाओं के लिए आवश्यक प्रमाण पत्रों और दस्तावेज़ों की विस्तृत चेकलिस्ट तैयार करें।'
+        : 'Generate a complete, prioritized document checklist with issuing authorities and verification prerequisites for my eligible schemes.',
+  },
+  {
+    id: 'roadmap',
+    label: '🚀 Application Roadmap',
+    query: (lang: string) =>
+      lang === 'pa'
+        ? 'ਸਰਕਾਰੀ ਪੋਰਟਲ ਤੇ ਅਪਲਾਈ ਕਰਨ ਲਈ ਕਦਮ-ਦਰ-ਕਦਮ ਰੋਡਮੈਪ ਦੱਸੋ।'
+        : lang === 'hi'
+        ? 'आधिकारिक सरकारी पोर्टल्स पर आवेदन करने के लिए चरण-दर-चरण रोडमैप बताएं।'
+        : 'Provide an exact step-by-step application roadmap for applying on official portals for my eligible schemes.',
+  },
+  {
+    id: 'certificates',
+    label: '🏛️ Certificate Guide',
+    query: (lang: string) =>
+      lang === 'pa'
+        ? 'ਪੰਜਾਬ ਵਿੱਚ ਜਾਤੀ, ਆਮਦਨ ਅਤੇ ਰਿਹਾਇਸ਼ ਸਰਟੀਫਿਕੇਟ ਕਿਵੇਂ ਅਤੇ ਕਿੱਥੋਂ ਬਣਵਾਏ ਜਾ ਸਕਦੇ ਹਨ?'
+        : lang === 'hi'
+        ? 'जाति प्रमाण पत्र, आय प्रमाण पत्र और निवास प्रमाण पत्र कैसे और कहाँ से बनवाएं?'
+        : 'How and where can I apply for digital Caste Certificate, Income Certificate, and Domicile Certificate in Punjab?',
+  },
+  {
+    id: 'compare',
+    label: '⚖️ Compare Top Schemes',
+    query: (lang: string) =>
+      lang === 'pa'
+        ? 'ਮੇਰੇ ਪ੍ਰੋਫਾਈਲ ਮੁਤਾਬਕ ਸਭ ਤੋਂ ਵਧੀਆ ਸਕੀਮਾਂ ਦੇ ਲਾਭਾਂ ਅਤੇ ਸ਼ਰਤਾਂ ਦੀ ਆਪਸ ਵਿੱਚ ਤੁਲਨਾ ਕਰੋ।'
+        : lang === 'hi'
+        ? 'मेरी प्रोफ़ाइल के अनुसार शीर्ष योजनाओं के लाभों और शर्तों की आपस में तुलना करें।'
+        : 'Compare the top welfare schemes matching my profile, highlighting differences in benefits, income limits, and disbursement modes.',
+  },
+];
 
 interface Message {
   id: string;
@@ -51,6 +107,19 @@ export const Assistant: React.FC = () => {
   });
   const [editingProfile, setEditingProfile] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [recordsMap, setRecordsMap] = useState<Record<string, SchemeRecord>>({});
+
+  useEffect(() => {
+    api.records.list().then((res) => {
+      const map: Record<string, SchemeRecord> = {};
+      res.records.forEach((r) => {
+        map[r.id] = r;
+      });
+      setRecordsMap(map);
+    }).catch((err) => {
+      console.error('Failed to load records map:', err);
+    });
+  }, []);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -268,6 +337,72 @@ export const Assistant: React.FC = () => {
                   </div>
                 )}
 
+                {/* Interactive Recommended Scheme Action Cards */}
+                {msg.suggestedRecordIds && msg.suggestedRecordIds.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                    <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-blue-600" />
+                      Recommended Verified Schemes & Services
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {msg.suggestedRecordIds.map((recId) => {
+                        const rec = recordsMap[recId];
+                        if (!rec) return null;
+                        return (
+                          <div
+                            key={recId}
+                            className="p-3 bg-white rounded-xl border border-slate-200 text-slate-800 shadow-2xs hover:border-blue-300 transition flex flex-col justify-between"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1 mb-1">
+                                <span className="font-bold text-[11px] text-slate-900 truncate">
+                                  {rec.name}
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded text-[8px] font-semibold bg-blue-50 text-blue-700 uppercase tracking-wider shrink-0">
+                                  {rec.record_type}
+                                </span>
+                              </div>
+                              {rec.benefits && (
+                                <p className="text-[10px] text-slate-600 line-clamp-2 mb-2 leading-relaxed">
+                                  {rec.benefits}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-[10px]">
+                              <Link
+                                to={`/schemes/${rec.id}`}
+                                className="text-blue-600 hover:underline font-semibold"
+                              >
+                                View Details
+                              </Link>
+                              <span className="text-slate-300">•</span>
+                              <Link
+                                to={`/checklist`}
+                                className="text-emerald-700 hover:underline font-semibold"
+                              >
+                                Checklist
+                              </Link>
+                              {rec.application_url && (
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <a
+                                    href={rec.application_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-slate-600 hover:underline inline-flex items-center gap-0.5"
+                                  >
+                                    Portal <ExternalLink className="w-2.5 h-2.5" />
+                                  </a>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Per-Message "How I got this answer" Drawer */}
                 {msg.steps && (
                   <details className="mt-2 text-[11px] text-slate-600 bg-white/70 rounded-xl p-2 border border-slate-200">
@@ -347,6 +482,25 @@ export const Assistant: React.FC = () => {
               <p><strong>5. Validate:</strong> Audits citations against stored sources, removing ungrounded claims.</p>
             </div>
           )}
+        </div>
+
+        {/* AI Skills Action Bar */}
+        <div className="px-3 sm:px-4 py-2.5 bg-slate-50/80 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
+            <Sparkles className="w-3 h-3 text-blue-600" />
+            AI Skills:
+          </span>
+          {AI_SKILLS.map((skill) => (
+            <button
+              key={skill.id}
+              type="button"
+              disabled={loading}
+              onClick={() => handleSend(skill.query(language))}
+              className="px-2.5 py-1 text-[11px] font-medium bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 rounded-lg whitespace-nowrap shadow-2xs transition shrink-0 disabled:opacity-50"
+            >
+              {skill.label}
+            </button>
+          ))}
         </div>
 
         {/* Input Bar */}
