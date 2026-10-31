@@ -12,7 +12,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # --- Stage 2: Production Python Backend ---
-FROM --platform=linux/amd64 python:3.11-slim AS production
+FROM --platform=linux/amd64 python:3.12-slim AS production
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
