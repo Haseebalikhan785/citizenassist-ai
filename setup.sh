@@ -74,7 +74,7 @@ fi
 # Initialize database and seed data
 echo ""
 echo "[7/8] Initializing database and seeding data..."
-python3 -m backend.app.init_db
+PYTHONPATH=. python -m backend.app.init_db
 echo "  Database initialized and seeded"
 
 # Create data directories

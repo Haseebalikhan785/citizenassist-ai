@@ -22,7 +22,7 @@ source venv/bin/activate
 # Check if database exists
 if [ ! -f "data/citizenassist.db" ]; then
     echo "Database not found. Initializing..."
-    python3 -m backend.app.init_db
+    PYTHONPATH=. python -m backend.app.init_db
 fi
 
 # Check if frontend is built
@@ -43,4 +43,4 @@ echo "  └───────────────────────
 echo ""
 
 # Start the server
-python3 -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+PYTHONPATH=. python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
