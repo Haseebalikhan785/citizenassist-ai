@@ -2,10 +2,11 @@
 Deterministic eligibility engine.
 
 Evaluates structured rules against a citizen profile to determine eligibility
-for government schemes and services.
+for government schemes and services without LLM hallucination.
 """
 
 import logging
+import re
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -17,13 +18,38 @@ logger = logging.getLogger(__name__)
 
 
 def _coerce_numeric(val: Any) -> float | None:
-    """Try to coerce a value to a float."""
+    """
+    Coerce a value to a float, handling numbers, strings with commas,
+    currency signs, and lakh notations (e.g. '2.5 lakh' -> 250000).
+    """
     if val is None:
         return None
-    try:
+    if isinstance(val, (int, float)):
         return float(val)
-    except (TypeError, ValueError):
+
+    s = str(val).strip().lower()
+    if not s:
         return None
+
+    # Handle lakh notation: e.g. "2.5 lakh", "2 lakh", "2.5 lacs"
+    lakh_match = re.search(r"^(\d+(?:\.\d+)?)\s*(?:lakh|lakhs|lac|lacs)$", s)
+    if lakh_match:
+        try:
+            return float(lakh_match.group(1)) * 100000.0
+        except ValueError:
+            pass
+
+    # Strip currency symbols and formatting commas
+    cleaned = re.sub(r"[₹,rs\.\s]", "", s)
+    # Check if cleaned is numeric
+    try:
+        return float(cleaned)
+    except (TypeError, ValueError):
+        # Fallback to direct float conversion of original string if possible
+        try:
+            return float(s)
+        except (TypeError, ValueError):
+            return None
 
 
 def evaluate_rule(rule: EligibilityRule, profile: dict[str, Any]) -> RuleResult:
@@ -31,31 +57,69 @@ def evaluate_rule(rule: EligibilityRule, profile: dict[str, Any]) -> RuleResult:
     Evaluate a single eligibility rule against a user profile.
 
     Returns a RuleResult with status: MET, NOT_MET, or UNKNOWN.
+    Rules of kind='document' are marked as to be verified at application.
     """
     field = rule.field
     operator = rule.operator
     rule_value = rule.value
+    kind = rule.kind or "profile"
+    source_url = rule.source_url
+    source_excerpt = rule.source_excerpt
+    desc = rule.description or f"Rule for {field}"
 
     user_value = profile.get(field)
 
-    # If the profile doesn't contain the field, result is UNKNOWN
-    if user_value is None:
+    # Missing profile value
+    if user_value is None or user_value == "":
+        status = "UNKNOWN"
+        if kind == "document":
+            status = "UNKNOWN"
+            desc = f"{desc} (to be verified at application)"
         return RuleResult(
             rule_id=rule.id,
             field=field,
             operator=operator,
             value=rule_value,
-            status="UNKNOWN",
-            description=rule.description or f"Profile missing field: {field}",
+            status=status,
+            kind=kind,
+            source_url=source_url,
+            source_excerpt=source_excerpt,
+            description=desc,
             user_value=None,
         )
 
-    met = False
+    # Document-kind rules: verify if present, otherwise mark for application verification
+    if kind == "document":
+        desc = f"{desc} (to be verified at application)"
+        # If user explicitly indicated availability
+        if isinstance(user_value, bool):
+            status = "MET" if user_value else "UNKNOWN"
+        elif isinstance(user_value, list):
+            status = "MET" if any(str(v).lower() == str(rule_value).lower() for v in user_value) else "UNKNOWN"
+        else:
+            status = "MET" if str(user_value).lower() in ["true", "yes", "available", str(rule_value).lower()] else "UNKNOWN"
 
+        return RuleResult(
+            rule_id=rule.id,
+            field=field,
+            operator=operator,
+            value=rule_value,
+            status=status,
+            kind=kind,
+            source_url=source_url,
+            source_excerpt=source_excerpt,
+            description=desc,
+            user_value=user_value,
+        )
+
+    # Profile-kind rules evaluation
+    met = False
     try:
         if operator == "==":
-            # String or numeric equality
-            met = str(user_value).lower() == str(rule_value).lower()
+            met = str(user_value).strip().lower() == str(rule_value).strip().lower()
+
+        elif operator == "!=":
+            met = str(user_value).strip().lower() != str(rule_value).strip().lower()
 
         elif operator == "<=":
             uv = _coerce_numeric(user_value)
@@ -65,7 +129,8 @@ def evaluate_rule(rule: EligibilityRule, profile: dict[str, Any]) -> RuleResult:
             else:
                 return RuleResult(
                     rule_id=rule.id, field=field, operator=operator,
-                    value=rule_value, status="UNKNOWN",
+                    value=rule_value, status="UNKNOWN", kind=kind,
+                    source_url=source_url, source_excerpt=source_excerpt,
                     description=f"Cannot compare: {user_value} <= {rule_value}",
                     user_value=user_value,
                 )
@@ -78,7 +143,8 @@ def evaluate_rule(rule: EligibilityRule, profile: dict[str, Any]) -> RuleResult:
             else:
                 return RuleResult(
                     rule_id=rule.id, field=field, operator=operator,
-                    value=rule_value, status="UNKNOWN",
+                    value=rule_value, status="UNKNOWN", kind=kind,
+                    source_url=source_url, source_excerpt=source_excerpt,
                     description=f"Cannot compare: {user_value} >= {rule_value}",
                     user_value=user_value,
                 )
@@ -91,7 +157,8 @@ def evaluate_rule(rule: EligibilityRule, profile: dict[str, Any]) -> RuleResult:
             else:
                 return RuleResult(
                     rule_id=rule.id, field=field, operator=operator,
-                    value=rule_value, status="UNKNOWN",
+                    value=rule_value, status="UNKNOWN", kind=kind,
+                    source_url=source_url, source_excerpt=source_excerpt,
                     description=f"Cannot compare: {user_value} < {rule_value}",
                     user_value=user_value,
                 )
@@ -104,61 +171,68 @@ def evaluate_rule(rule: EligibilityRule, profile: dict[str, Any]) -> RuleResult:
             else:
                 return RuleResult(
                     rule_id=rule.id, field=field, operator=operator,
-                    value=rule_value, status="UNKNOWN",
+                    value=rule_value, status="UNKNOWN", kind=kind,
+                    source_url=source_url, source_excerpt=source_excerpt,
                     description=f"Cannot compare: {user_value} > {rule_value}",
                     user_value=user_value,
                 )
 
         elif operator == "in":
-            # User value should be in the list (rule_value is a list)
-            if isinstance(rule_value, list):
-                uv_lower = str(user_value).lower()
-                met = uv_lower in [str(v).lower() for v in rule_value]
+            if isinstance(rule_value, (list, tuple, set)):
+                targets = [str(v).strip().lower() for v in rule_value]
+                if isinstance(user_value, (list, tuple, set)):
+                    met = any(str(u).strip().lower() in targets for u in user_value)
+                else:
+                    met = str(user_value).strip().lower() in targets
             else:
-                met = str(user_value).lower() == str(rule_value).lower()
+                met = str(user_value).strip().lower() == str(rule_value).strip().lower()
 
         elif operator == "not_in":
-            if isinstance(rule_value, list):
-                uv_lower = str(user_value).lower()
-                met = uv_lower not in [str(v).lower() for v in rule_value]
+            if isinstance(rule_value, (list, tuple, set)):
+                targets = [str(v).strip().lower() for v in rule_value]
+                if isinstance(user_value, (list, tuple, set)):
+                    met = not any(str(u).strip().lower() in targets for u in user_value)
+                else:
+                    met = str(user_value).strip().lower() not in targets
             else:
-                met = str(user_value).lower() != str(rule_value).lower()
+                met = str(user_value).strip().lower() != str(rule_value).strip().lower()
 
         elif operator == "between":
-            # rule_value should be [min, max]
             uv = _coerce_numeric(user_value)
-            if uv is not None and isinstance(rule_value, list) and len(rule_value) == 2:
+            low, high = None, None
+            if isinstance(rule_value, (list, tuple)) and len(rule_value) >= 2:
                 low = _coerce_numeric(rule_value[0])
                 high = _coerce_numeric(rule_value[1])
-                if low is not None and high is not None:
-                    met = low <= uv <= high
-                else:
-                    return RuleResult(
-                        rule_id=rule.id, field=field, operator=operator,
-                        value=rule_value, status="UNKNOWN",
-                        description=f"Cannot compare range for {field}",
-                        user_value=user_value,
-                    )
+            elif isinstance(rule_value, str) and ("-" in rule_value or "to" in rule_value):
+                parts = re.split(r"[-–—]|(?:\bto\b)", rule_value)
+                if len(parts) >= 2:
+                    low = _coerce_numeric(parts[0])
+                    high = _coerce_numeric(parts[1])
+
+            if uv is not None and low is not None and high is not None:
+                met = low <= uv <= high
             else:
                 return RuleResult(
                     rule_id=rule.id, field=field, operator=operator,
-                    value=rule_value, status="UNKNOWN",
-                    description=f"Invalid between value for {field}",
+                    value=rule_value, status="UNKNOWN", kind=kind,
+                    source_url=source_url, source_excerpt=source_excerpt,
+                    description=f"Invalid between range for {field}: {rule_value}",
                     user_value=user_value,
                 )
 
         elif operator == "contains":
-            # Check if user_value (a list or string) contains rule_value
-            if isinstance(user_value, list):
-                met = str(rule_value).lower() in [str(v).lower() for v in user_value]
+            rv = str(rule_value).strip().lower()
+            if isinstance(user_value, (list, tuple, set)):
+                met = any(rv in str(v).strip().lower() for v in user_value)
             else:
-                met = str(rule_value).lower() in str(user_value).lower()
+                met = rv in str(user_value).strip().lower()
 
         else:
             logger.warning("Unknown operator: %s", operator)
             return RuleResult(
                 rule_id=rule.id, field=field, operator=operator,
-                value=rule_value, status="UNKNOWN",
+                value=rule_value, status="UNKNOWN", kind=kind,
+                source_url=source_url, source_excerpt=source_excerpt,
                 description=f"Unknown operator: {operator}",
                 user_value=user_value,
             )
@@ -167,7 +241,8 @@ def evaluate_rule(rule: EligibilityRule, profile: dict[str, Any]) -> RuleResult:
         logger.error("Error evaluating rule %s: %s", rule.id, e)
         return RuleResult(
             rule_id=rule.id, field=field, operator=operator,
-            value=rule_value, status="UNKNOWN",
+            value=rule_value, status="UNKNOWN", kind=kind,
+            source_url=source_url, source_excerpt=source_excerpt,
             description=f"Evaluation error: {e}",
             user_value=user_value,
         )
@@ -178,20 +253,28 @@ def evaluate_rule(rule: EligibilityRule, profile: dict[str, Any]) -> RuleResult:
         operator=operator,
         value=rule_value,
         status="MET" if met else "NOT_MET",
-        description=rule.description,
+        kind=kind,
+        source_url=source_url,
+        source_excerpt=source_excerpt,
+        description=desc,
         user_value=user_value,
     )
 
 
 def evaluate_eligibility(record_id: str, profile: dict[str, Any], db: Session) -> EligibilityResult:
     """
-    Evaluate all eligibility rules for a record against a user profile.
+    Evaluate all approved eligibility rules for a record against a user profile.
 
-    Logic:
-    - Document rules (kind='document') never block eligibility.
-    - Any profile rule NOT_MET → "Not eligible based on known criteria"
-    - All profile rules MET → "Potentially eligible - further verification required"
-    - Otherwise → "Insufficient information - provide more details"
+    Deterministic logic strictly adhering to BUILD_BRIEF Section 7:
+    - Only approved rules are evaluated (is_approved == True).
+    - If a record has no approved rules:
+        return 'Insufficient information - eligibility rules not yet extracted'.
+    - Rules of kind 'document' never block Potentially eligible;
+        they are listed as 'to be verified at application'.
+    - Overall result:
+        any profile rule NOT_MET -> 'Not eligible based on known criteria'
+        none NOT_MET and all profile rules MET -> 'Potentially eligible - further verification required'
+        otherwise -> 'Insufficient information'
     """
     record = db.query(Record).filter(Record.id == record_id).first()
     if not record:
@@ -202,51 +285,59 @@ def evaluate_eligibility(record_id: str, profile: dict[str, Any], db: Session) -
             message="Record not found",
         )
 
-    rules = db.query(EligibilityRule).filter(EligibilityRule.record_id == record_id).all()
+    # Strictly evaluate only approved rules
+    rules = (
+        db.query(EligibilityRule)
+        .filter(
+            EligibilityRule.record_id == record_id,
+            EligibilityRule.is_approved.is_(True),
+        )
+        .all()
+    )
 
     if not rules:
         return EligibilityResult(
             record_id=record_id,
             record_name=record.name,
             overall_status="insufficient_info",
-            message="No eligibility rules defined. Check the official portal for eligibility criteria.",
+            message="Insufficient information - eligibility rules not yet extracted",
+            rule_results=[],
             category=record.category,
-            verification_status=record.verification_status,
+            verification_status=record.verification_status or "demo",
         )
 
     rule_results: list[RuleResult] = []
+    profile_total = 0
     profile_met = 0
     profile_not_met = 0
     profile_unknown = 0
-    profile_total = 0
 
     for rule in rules:
         result = evaluate_rule(rule, profile)
         rule_results.append(result)
 
-        # Only profile rules affect eligibility determination
-        if rule.kind == "profile":
-            profile_total += 1
-            if result.status == "MET":
-                profile_met += 1
-            elif result.status == "NOT_MET":
-                profile_not_met += 1
-            else:
-                profile_unknown += 1
+        # Rules of kind "document" never block Potentially eligible
+        if rule.kind == "document":
+            continue
 
-    # Determine overall status
+        profile_total += 1
+        if result.status == "MET":
+            profile_met += 1
+        elif result.status == "NOT_MET":
+            profile_not_met += 1
+        else:
+            profile_unknown += 1
+
+    # Status calculation strictly according to Section 7
     if profile_not_met > 0:
         overall_status = "not_eligible"
-        message = "Not eligible based on known criteria. Some eligibility conditions are not met."
+        message = "Not eligible based on known criteria"
     elif profile_total > 0 and profile_met == profile_total:
         overall_status = "eligible"
-        message = "Potentially eligible - further verification required on the official portal."
-    elif profile_unknown > 0:
-        overall_status = "insufficient_info"
-        message = "Insufficient information - please provide more profile details for a complete assessment."
+        message = "Potentially eligible - further verification required"
     else:
         overall_status = "insufficient_info"
-        message = "No profile-level eligibility rules to evaluate."
+        message = "Insufficient information"
 
     return EligibilityResult(
         record_id=record_id,
@@ -255,5 +346,5 @@ def evaluate_eligibility(record_id: str, profile: dict[str, Any], db: Session) -
         message=message,
         rule_results=rule_results,
         category=record.category,
-        verification_status=record.verification_status,
+        verification_status=record.verification_status or "demo",
     )

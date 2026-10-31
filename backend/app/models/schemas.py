@@ -204,6 +204,9 @@ class RuleResult(BaseModel):
     operator: str
     value: Any
     status: str  # MET, NOT_MET, UNKNOWN
+    kind: str = "profile"
+    source_url: str | None = None
+    source_excerpt: str | None = None
     description: str | None = None
     user_value: Any | None = None
 
@@ -215,7 +218,7 @@ class EligibilityResult(BaseModel):
     message: str
     rule_results: list[RuleResult] = []
     category: str | None = None
-    verification_status: str = "demo"
+    verification_status: str | None = "demo"
 
 
 # ---------------------------------------------------------------------------
@@ -264,8 +267,18 @@ class ChatRequest(BaseModel):
 
 class ChatClaim(BaseModel):
     text: str
+    label: str = "verified"  # verified, inferred, missing
+    source_ids: list[str] = []
     source_url: str | None = None
+    source_title: str | None = None
     verified: bool = False
+
+
+class AssistantStepInfo(BaseModel):
+    understood: dict[str, Any] = {}
+    retrieved: list[str] = []
+    assessed: list[dict[str, Any]] = []
+    method: str = "agentic_rag"
 
 
 class ChatResponse(BaseModel):
@@ -274,6 +287,7 @@ class ChatResponse(BaseModel):
     claims: list[ChatClaim] = []
     suggested_records: list[str] = []  # record IDs
     profile_extracted: dict[str, Any] | None = None
+    steps: AssistantStepInfo | None = None
 
 
 # ---------------------------------------------------------------------------

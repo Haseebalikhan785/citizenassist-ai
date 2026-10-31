@@ -1,12 +1,13 @@
 """
 Unit tests for deterministic eligibility engine.
-Covers 25+ test cases: boundary values, missing fields, wrong state,
-multiple schemes, operators, and kind="document" behavior.
+Covers 30+ test cases: boundary values, missing fields, wrong state,
+multiple schemes, operators, lakh coercion, unapproved rule isolation,
+and kind="document" non-blocking behavior.
 """
 
 import pytest
 from backend.app.models.database import EligibilityRule, Record
-from backend.app.services.eligibility import evaluate_eligibility, evaluate_rule
+from backend.app.services.eligibility import evaluate_eligibility, evaluate_rule, _coerce_numeric
 
 
 def test_rule_less_than_or_equal_met():
@@ -63,6 +64,13 @@ def test_rule_missing_profile_field_unknown():
     assert res.status == "UNKNOWN"
 
 
+def test_rule_empty_string_profile_unknown():
+    """Empty string field in profile must return UNKNOWN."""
+    rule = EligibilityRule(field="state", operator="==", value="Punjab", kind="profile")
+    res = evaluate_rule(rule, {"state": ""})
+    assert res.status == "UNKNOWN"
+
+
 def test_rule_missing_age_unknown():
     rule = EligibilityRule(field="age", operator=">=", value=18, kind="profile")
     res = evaluate_rule(rule, {"state": "Punjab"})
@@ -85,6 +93,14 @@ def test_rule_equality_not_met():
     rule = EligibilityRule(field="category", operator="==", value="SC", kind="profile")
     res = evaluate_rule(rule, {"category": "General"})
     assert res.status == "NOT_MET"
+
+
+def test_rule_not_equal_operator():
+    rule = EligibilityRule(field="category", operator="!=", value="General", kind="profile")
+    res_met = evaluate_rule(rule, {"category": "SC"})
+    assert res_met.status == "MET"
+    res_not = evaluate_rule(rule, {"category": "General"})
+    assert res_not.status == "NOT_MET"
 
 
 def test_rule_state_match_met():
@@ -161,6 +177,73 @@ def test_rule_not_in_operator():
     assert res2.status == "NOT_MET"
 
 
+def test_rule_contains_operator():
+    rule = EligibilityRule(field="target_beneficiaries", operator="contains", value="farmer", kind="profile")
+    res = evaluate_rule(rule, {"target_beneficiaries": ["farmers", "landholders"]})
+    assert res.status == "MET"
+    res_not = evaluate_rule(rule, {"target_beneficiaries": ["students", "teachers"]})
+    assert res_not.status == "NOT_MET"
+
+
+def test_rule_lakh_string_coercion():
+    """Verify that user inputs with lakh notation are coerced accurately."""
+    rule = EligibilityRule(field="annual_family_income", operator="<=", value=250000, kind="profile")
+    # "2 lakh" = 200,000 <= 250,000 -> MET
+    res1 = evaluate_rule(rule, {"annual_family_income": "2 lakh"})
+    assert res1.status == "MET"
+
+    # "2.5 lakh" = 250,000 <= 250,000 -> MET (boundary)
+    res2 = evaluate_rule(rule, {"annual_family_income": "2.5 lakh"})
+    assert res2.status == "MET"
+
+    # "3 lakh" = 300,000 <= 250,000 -> NOT_MET
+    res3 = evaluate_rule(rule, {"annual_family_income": "3 lakh"})
+    assert res3.status == "NOT_MET"
+
+    # "₹2,50,000" with formatting symbols
+    res4 = evaluate_rule(rule, {"annual_family_income": "₹2,50,000"})
+    assert res4.status == "MET"
+
+
+def test_rule_result_fields_populated():
+    """Verify kind, source_url, and source_excerpt are retained in RuleResult."""
+    rule = EligibilityRule(
+        id="r_test",
+        field="category",
+        operator="==",
+        value="SC",
+        kind="profile",
+        source_url="https://scholarships.gov.in",
+        source_excerpt="Scheme restricted to SC category students.",
+        description="Must belong to SC category",
+    )
+    res = evaluate_rule(rule, {"category": "SC"})
+    assert res.kind == "profile"
+    assert res.source_url == "https://scholarships.gov.in"
+    assert res.source_excerpt == "Scheme restricted to SC category students."
+    assert res.status == "MET"
+
+
+def test_kind_document_never_blocks_eligibility():
+    """
+    Section 7 rule:
+    Rules of kind 'document' never block Potentially eligible;
+    they are listed as 'to be verified at application'.
+    """
+    rule = EligibilityRule(
+        id="r_doc",
+        field="income_certificate",
+        operator="==",
+        value=True,
+        kind="document",
+        description="Income Certificate issued by Tehsildar",
+    )
+    # Even if missing in profile, document rule is UNKNOWN and marked for application verification
+    res = evaluate_rule(rule, {})
+    assert res.status == "UNKNOWN"
+    assert "to be verified at application" in res.description
+
+
 def test_evaluate_eligibility_mocked_db():
     """Test full overall_status logic with mock Session."""
     class MockQuery:
@@ -169,7 +252,9 @@ def test_evaluate_eligibility_mocked_db():
             self.rules = rules
 
         def filter(self, *args, **kwargs):
-            return self
+            # Only keep approved rules
+            approved = [r for r in self.rules if getattr(r, "is_approved", True)]
+            return MockQuery(self.record, approved)
 
         def first(self):
             return self.record
@@ -187,17 +272,17 @@ def test_evaluate_eligibility_mocked_db():
 
     mock_rec = Record(id="rec1", name="Post-Matric Scholarship", category="Education", verification_status="demo")
     mock_rules = [
-        EligibilityRule(id="r1", record_id="rec1", field="category", operator="==", value="SC", kind="profile"),
-        EligibilityRule(id="r2", record_id="rec1", field="annual_family_income", operator="<=", value=250000, kind="profile"),
-        EligibilityRule(id="r3", record_id="rec1", field="income_certificate", operator="==", value=True, kind="document"),
+        EligibilityRule(id="r1", record_id="rec1", field="category", operator="==", value="SC", kind="profile", is_approved=True),
+        EligibilityRule(id="r2", record_id="rec1", field="annual_family_income", operator="<=", value=250000, kind="profile", is_approved=True),
+        EligibilityRule(id="r3", record_id="rec1", field="income_certificate", operator="==", value=True, kind="document", is_approved=True),
     ]
 
     db = MockDB(mock_rec, mock_rules)
 
-    # 1. Eligible citizen: meets both profile rules
+    # 1. Eligible citizen: meets both profile rules; document rule does NOT block eligibility
     res = evaluate_eligibility("rec1", {"category": "SC", "annual_family_income": 200000}, db)
     assert res.overall_status == "eligible"
-    assert "Potentially eligible" in res.message
+    assert "Potentially eligible - further verification required" in res.message
 
     # 2. Not eligible citizen: exceeds income
     res_not = evaluate_eligibility("rec1", {"category": "SC", "annual_family_income": 300000}, db)
@@ -207,3 +292,31 @@ def test_evaluate_eligibility_mocked_db():
     # 3. Insufficient info: category missing
     res_unknown = evaluate_eligibility("rec1", {"annual_family_income": 200000}, db)
     assert res_unknown.overall_status == "insufficient_info"
+    assert "Insufficient information" in res_unknown.message
+
+
+def test_evaluate_eligibility_zero_approved_rules():
+    """
+    Section 7 rule:
+    If a record has no approved rules, return
+    'Insufficient information - eligibility rules not yet extracted'.
+    """
+    class MockQueryEmpty:
+        def filter(self, *args, **kwargs):
+            return self
+
+        def first(self):
+            return Record(id="draft_scheme", name="Draft Scheme Without Rules", category="General")
+
+        def all(self):
+            return []  # No approved rules
+
+    class MockDBEmpty:
+        def query(self, model):
+            return MockQueryEmpty()
+
+    db = MockDBEmpty()
+    res = evaluate_eligibility("draft_scheme", {"age": 25}, db)
+    assert res.overall_status == "insufficient_info"
+    assert res.message == "Insufficient information - eligibility rules not yet extracted"
+    assert res.rule_results == []

@@ -242,8 +242,8 @@ SEED_RECORDS = [
             {"name": "Savings Bank Account / Passbook", "description": "Active savings account for monthly auto-debit contributions", "linked_service_id": None}
         ],
         "application_procedure": "Visit the bank branch where you have a savings account, fill the APY registration form with auto-debit consent, or enroll online via your bank's netbanking portal.",
-        "application_url": "https://www.npscra.nsdl.co.in",
-        "official_source_url": "https://www.npscra.nsdl.co.in",
+        "application_url": "https://www.myscheme.gov.in/schemes/apy",
+        "official_source_url": "https://www.myscheme.gov.in/schemes/apy",
         "source_excerpt": "Atal Pension Yojana is open to all bank account holders between 18 to 40 years of age. Fixed pension amount of Rs. 1000 to 5000 per month will be given after 60 years of age.",
         "last_verified_date": FETCHED_STR,
         "fetched_at": NOW,
@@ -405,9 +405,9 @@ SEED_RECORDS = [
             {"name": "Age Proof of Deceased", "description": "Showing age between 18 and 59 years", "linked_service_id": None},
             {"name": "Bank Passbook of Applicant", "description": "Surviving spouse or elder family member's account", "linked_service_id": None}
         ],
-        "application_procedure": "Apply online at nsap.nic.in or submit form to District Social Welfare Office / Tehsildar office within 1 year of the breadwinner's demise.",
-        "application_url": "https://nsap.nic.in",
-        "official_source_url": "https://nsap.nic.in",
+        "application_procedure": "Apply online at myscheme.gov.in / nsap portal or submit form to District Social Welfare Office / Tehsildar office within 1 year of the breadwinner's demise.",
+        "application_url": "https://www.myscheme.gov.in/schemes/nfbs",
+        "official_source_url": "https://www.myscheme.gov.in/schemes/nfbs",
         "source_excerpt": "Under NFBS, a lump sum assistance of Rs. 20,000 is provided to the bereaved household in the event of death of the primary breadwinner.",
         "last_verified_date": FETCHED_STR,
         "fetched_at": NOW,
@@ -595,8 +595,9 @@ def seed_database(db: Session) -> int:
                 operator=r["operator"],
                 value=r["value"],
                 kind=r.get("kind", "profile"),
-                description=r.get("description", ""),
+                source_url=r.get("source_url", record.official_source_url),
                 source_excerpt=r.get("source_excerpt", ""),
+                description=r.get("description", ""),
                 is_approved=True,
             )
             db.add(rule)

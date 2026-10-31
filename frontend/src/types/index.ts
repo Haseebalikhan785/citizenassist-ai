@@ -56,13 +56,15 @@ export interface SchemeRecord {
 }
 
 export interface RuleResult {
-  rule_id: string;
+  rule_id?: string;
   field: string;
   operator: string;
   value: any;
   status: 'MET' | 'NOT_MET' | 'UNKNOWN';
-  description: string;
+  kind?: string;
+  source_url?: string;
   source_excerpt?: string;
+  description: string;
   user_value?: any;
 }
 
@@ -97,8 +99,18 @@ export interface SearchResultItem {
 
 export interface ChatClaim {
   text: string;
+  label?: 'verified' | 'inferred' | 'missing';
+  source_ids?: string[];
   source_url?: string;
+  source_title?: string;
   verified: boolean;
+}
+
+export interface AssistantStepInfo {
+  understood?: Record<string, any>;
+  retrieved?: string[];
+  assessed?: Array<{ record_id: string; record_name: string; status: string; message: string }>;
+  method?: string;
 }
 
 export interface ChatResponse {
@@ -107,6 +119,7 @@ export interface ChatResponse {
   claims: ChatClaim[];
   suggested_records: string[];
   profile_extracted?: Record<string, any>;
+  steps?: AssistantStepInfo;
 }
 
 export interface SavedItem {

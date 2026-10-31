@@ -1,4 +1,5 @@
 import {
+  ChatResponse,
   ChecklistItem,
   EligibilityResult,
   SavedItem,
@@ -90,13 +91,7 @@ export const api = {
   },
   assistant: {
     chat: (data: { message: string; session_id?: string; language?: string; profile?: Record<string, any> }) =>
-      request<{
-        reply: string;
-        session_id: string;
-        claims: Array<{ text: string; source_url?: string; verified: boolean }>;
-        suggested_records: string[];
-        profile_extracted?: Record<string, any>;
-      }>('/assistant/chat', {
+      request<ChatResponse>('/assistant/chat', {
         method: 'POST',
         body: JSON.stringify(data),
       }),

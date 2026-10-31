@@ -239,3 +239,76 @@ def test_rag_relevance_benchmark(query, expected_record_id):
         f"Query '{query}' failed to retrieve expected record '{expected_record_id}'. "
         f"Retrieved: {retrieved_ids}"
     )
+
+
+# ---------------------------------------------------------------------------
+# 9. Extract Profile & Missing API Key Fallback Integration Tests
+# ---------------------------------------------------------------------------
+
+def test_extract_profile_endpoint():
+    """Verify endpoint extracts structured profile without hallucination."""
+    resp = client.post(
+        "/api/assistant/extract-profile",
+        json={"message": "I am a 20-year-old SC student from Punjab with annual family income of 2 lakh."}
+    )
+    assert resp.status_code == 200
+    extracted = resp.json()["extracted"]
+    assert extracted["age"] == 20
+    assert extracted["category"] == "SC"
+    assert extracted["state"] == "Punjab"
+    assert extracted["annual_family_income"] == 200000
+
+
+def test_eligibility_check_all_endpoint():
+    """Verify bulk eligibility check evaluates records for given profile."""
+    resp = client.post(
+        "/api/eligibility/check-all",
+        json={"profile": {"category": "SC", "state": "Punjab", "annual_family_income": 200000, "occupation": "student"}}
+    )
+    assert resp.status_code == 200
+    results = resp.json()
+    assert isinstance(results, list)
+    assert len(results) >= 5
+    # Post-matric SC scholarship should be eligible
+    sc_res = next((r for r in results if r["record_id"] == "post-matric-sc"), None)
+    if sc_res:
+        assert sc_res["overall_status"] == "eligible"
+
+
+def test_missing_api_key_fallback():
+    """Chat endpoint must cleanly return retrieval-only mode when GEMINI_API_KEY is empty."""
+    import os
+    from backend.app.core.config import settings
+
+    orig_key = settings.GEMINI_API_KEY
+    try:
+        settings.GEMINI_API_KEY = ""
+        resp = client.post(
+            "/api/assistant/chat",
+            json={"message": "I am a farmer looking for income support.", "language": "en"}
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "reply" in data
+        assert "Retrieval-Only Mode" in data["reply"] or "pm-kisan" in str(data.get("suggested_records", []))
+    finally:
+        settings.GEMINI_API_KEY = orig_key
+
+
+def test_real_gemini_api_integration():
+    """Integration test with live Gemini API; skipped if GEMINI_API_KEY is not configured."""
+    from backend.app.core.config import settings
+    if not settings.GEMINI_API_KEY or settings.GEMINI_API_KEY.startswith("your_"):
+        pytest.skip("Real GEMINI_API_KEY is not configured in .env; skipping live API test.")
+
+    resp = client.post(
+        "/api/assistant/chat",
+        json={
+            "message": "I am a 20-year-old SC student from Punjab with family income of 2 lakh.",
+            "language": "en"
+        }
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "reply" in data
+    assert len(data.get("claims", [])) > 0

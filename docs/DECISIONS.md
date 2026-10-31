@@ -35,3 +35,12 @@
 ## Decision 9: Single Process Production
 **Decision**: FastAPI serves built frontend static files on port 8000
 **Reason**: Simplifies deployment for beginners - one command starts everything. Vite dev proxy used in development.
+
+## Decision 10: Strict Eligibility Rule Approval and Non-blocking Document Rules
+**Decision**: Only evaluate rules with `is_approved == True` in the deterministic engine. Records with zero approved rules return `"Insufficient information - eligibility rules not yet extracted"`. Rules of `kind == "document"` are strictly non-blocking.
+**Reason**: BUILD_BRIEF.md Section 7 mandates that LLMs may only propose draft rules during ingestion, and admins must review/approve before execution. Documents require physical/procedural verification and must never falsely report a citizen as ineligible.
+
+## Decision 11: Citation Validation and Untrusted Data Delimiters
+**Decision**: Post-process assistant claims with a dedicated `validate_citations()` step that strips hallucinated source IDs and downgrades unverified claims to `inferred` or `missing`. Wrap retrieved documents in escaped `<retrieved_document>` tags treated strictly as inert data.
+**Reason**: Guarantees zero hallucinations and prevents prompt-injection attacks from overriding deterministic engine findings or inventing welfare claims.
+

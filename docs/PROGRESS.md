@@ -52,3 +52,28 @@
 - [x] `scripts/smoke_test.py` verified against running server
 - [x] `scripts/demo_check.py` verified 100% stage-ready in English and Punjabi
 - [x] Fresh-install readiness verified
+
+## Milestone 5 - AUDIT & REINFORCEMENT (Sections 6 & 7 Compliance)
+- [x] **Section 7 Eligibility Engine Rules Logic**:
+  - Filtered query strictly to `is_approved.is_(True)` to isolate draft/unapproved rules
+  - Records with zero approved rules return exact brief requirement: `"Insufficient information - eligibility rules not yet extracted"`
+  - Overall status evaluation strictly conforms: any NOT_MET -> `"Not eligible based on known criteria"`, none NOT_MET and all MET -> `"Potentially eligible - further verification required"`, otherwise -> `"Insufficient information"`
+  - `kind="document"` rules non-blocking: never block eligibility; flagged as `"to be verified at application"`
+  - `RuleResult` schema enriched with `kind`, `source_url`, and `source_excerpt`
+  - Multi-format number and lakh string parser supporting `"2.5 lakh"`, `"₹2,50,000"`, `"200000"`
+  - Expanded unit test suite to 32 tests covering boundaries, missing fields, lakh strings, document rules, and zero-approved-rule isolation
+- [x] **Section 6 AI Assistant Citation Checking & Prompt-Injection Defense**:
+  - Grounded claims schema (`label: verified|inferred|missing`, `source_ids[]`, `source_title`, `source_url`)
+  - Dedicated citation validator `validate_citations()`: filters out hallucinated doc IDs and downgrades unbacked verified claims to `inferred` or `missing`
+  - Anti-injection tag escaping: sanitizes `</retrieved_document>` and untrusted user input
+  - Strict system prompt declaring all retrieved documents and user queries as inert UNTRUSTED DATA
+  - Low-confidence retrieval threshold fallback preventing model hallucination for unindexed queries
+  - Automatic grounded wording enforcement substituting absolute approvals with `"may be eligible (confirm on the official portal)"`
+  - Multilingual profile extraction for English, Hindi (Devanagari), and Punjabi (Gurmukhi) without ASCII `\b` word boundary failures
+  - Schema validation guaranteeing zero hallucinated fields outside `ALLOWED_PROFILE_FIELDS`
+- [x] **Verification**:
+  - 66 backend pytest tests passing (65 passed, 1 skipped live API test)
+  - Frontend TypeScript build: 0 errors
+  - `scripts/smoke_test.py`: 100% pass
+  - `scripts/demo_check.py`: 100% stage-ready in English and Punjabi
+  - `scripts/check_links.py`: 11 of 12 government portals verified with 200 OK

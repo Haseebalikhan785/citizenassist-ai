@@ -73,6 +73,7 @@ async def chat(
             "claims": [c.model_dump() for c in response.claims],
             "suggested_records": response.suggested_records,
             "profile_extracted": response.profile_extracted,
+            "steps": response.steps.model_dump() if response.steps else None,
         },
     )
     db.add(asst_msg)

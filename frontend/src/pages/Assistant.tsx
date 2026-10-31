@@ -15,7 +15,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { api } from '../utils/api';
-import { ChatClaim, ChatResponse } from '../types';
+import { AssistantStepInfo, ChatClaim, ChatResponse } from '../types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../i18n';
@@ -27,6 +27,7 @@ interface Message {
   claims?: ChatClaim[];
   suggestedRecordIds?: string[];
   profileExtracted?: Record<string, any>;
+  steps?: AssistantStepInfo;
 }
 
 export const Assistant: React.FC = () => {
@@ -96,6 +97,7 @@ export const Assistant: React.FC = () => {
         claims: res.claims,
         suggestedRecordIds: res.suggested_records,
         profileExtracted: res.profile_extracted,
+        steps: res.steps,
       };
 
       setMessages((prev) => [...prev, asstMsg]);
@@ -219,32 +221,84 @@ export const Assistant: React.FC = () => {
 
                 {/* Grounded Claims & Citations */}
                 {msg.claims && msg.claims.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-1.5">
+                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
                     <span className="text-[11px] font-bold text-slate-700 block">
                       {t('assistant.citations_title')}
                     </span>
                     {msg.claims.map((claim, idx) => (
                       <div
                         key={idx}
-                        className="text-[11px] bg-white p-2 rounded-lg border border-slate-200 text-slate-600 flex items-start gap-1.5"
+                        className="text-[11px] bg-white p-2.5 rounded-xl border border-slate-200 text-slate-700 flex items-start gap-2 shadow-xs"
                       >
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                        <ShieldCheck className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${
+                          claim.label === 'verified' ? 'text-emerald-600' : claim.label === 'inferred' ? 'text-amber-500' : 'text-slate-400'
+                        }`} />
                         <div className="flex-1">
-                          <span>{claim.text}</span>
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                              claim.label === 'verified'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : claim.label === 'inferred'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-slate-100 text-slate-600 border border-slate-200'
+                            }`}>
+                              {claim.label || (claim.verified ? 'verified' : 'inferred')}
+                            </span>
+                            {claim.source_title && (
+                              <span className="text-[10px] text-slate-500 font-medium truncate max-w-[200px]">
+                                {claim.source_title}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-slate-800 leading-snug">{claim.text}</div>
                           {claim.source_url && (
                             <a
                               href={claim.source_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline block mt-0.5 font-medium"
+                              className="text-blue-600 hover:underline inline-flex items-center gap-1 mt-1 font-semibold text-[10px]"
                             >
-                              Official Portal Link ↗
+                              <span>Official Verification Source</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
                             </a>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
+                )}
+
+                {/* Per-Message "How I got this answer" Drawer */}
+                {msg.steps && (
+                  <details className="mt-2 text-[11px] text-slate-600 bg-white/70 rounded-xl p-2 border border-slate-200">
+                    <summary className="cursor-pointer font-semibold text-blue-700 hover:text-blue-800">
+                      How I got this answer (Verified Pipeline)
+                    </summary>
+                    <div className="mt-2 space-y-1.5 pt-1.5 border-t border-slate-100 text-[10px]">
+                      {msg.steps.understood && Object.keys(msg.steps.understood).length > 0 && (
+                        <div>
+                          <strong>1. Understood Profile:</strong>{' '}
+                          {Object.entries(msg.steps.understood).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                        </div>
+                      )}
+                      {msg.steps.retrieved && msg.steps.retrieved.length > 0 && (
+                        <div>
+                          <strong>2. Verified Records Retrieved:</strong>{' '}
+                          {msg.steps.retrieved.join(', ')}
+                        </div>
+                      )}
+                      {msg.steps.assessed && msg.steps.assessed.length > 0 && (
+                        <div>
+                          <strong>3. Deterministic Assessment:</strong>
+                          <ul className="list-disc pl-4 space-y-0.5 mt-0.5">
+                            {msg.steps.assessed.map((a, i) => (
+                              <li key={i}>{a.record_name}: {a.status} - {a.message}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </details>
                 )}
               </div>
 
