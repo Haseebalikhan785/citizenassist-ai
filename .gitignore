@@ -1,5 +1,7 @@
 # CitizenAssist AI
 .env
+*.env
+*.env.local
 LOCAL_CREDENTIALS.txt
 __pycache__/
 *.pyc
@@ -14,7 +16,11 @@ data/*.db
 data/*.db-*
 data/*.db-shm
 data/*.db-wal
+*.db
+*.sqlite
+*.sqlite3
 data/uploads/
+uploads/
 *.egg-info/
 dist/
 build/
@@ -25,3 +31,11 @@ htmlcov/
 *.log
 .DS_Store
 Thumbs.db
+
+# AWS & Deployment artifacts
+.aws/
+*.pem
+*.key
+deploy_bundle.tar.gz
+deploy_bundle.zip
+
