@@ -64,7 +64,7 @@ def guest_login(response: Response, db: Session = Depends(get_db)):
         user = User(
             email=guest_email,
             hashed_password=hash_password("GuestDemo2026!"),
-            full_name="Guest Evaluator (HR Demo)",
+            full_name="Guest User",
             role="citizen",
             language_preference="en",
             profile_data={
@@ -78,6 +78,10 @@ def guest_login(response: Response, db: Session = Depends(get_db)):
             },
         )
         db.add(user)
+        db.commit()
+        db.refresh(user)
+    elif user.full_name != "Guest User":
+        user.full_name = "Guest User"
         db.commit()
         db.refresh(user)
 

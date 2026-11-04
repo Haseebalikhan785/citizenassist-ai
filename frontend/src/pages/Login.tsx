@@ -57,37 +57,6 @@ export const Login: React.FC = () => {
 
         {error && <ErrorMessage message={error} />}
 
-        {/* Fast Guest Access for HR & Evaluators */}
-        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider mb-2">
-            👔 HR & Evaluator Fast Access
-          </div>
-          <h2 className="text-xs font-bold text-emerald-950 mb-1">
-            Explore Full Sample Layout (No Password Required)
-          </h2>
-          <p className="text-[11px] text-emerald-700 mb-3 leading-relaxed">
-            Instantly tour personalized schemes, benefits, documents checklist, and AI features as a verified citizen.
-          </p>
-          <button
-            type="button"
-            onClick={handleGuestLogin}
-            disabled={loading}
-            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span>Continue as Guest Citizen</span>
-          </button>
-        </div>
-
-        <div className="relative my-5 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200"></div>
-          </div>
-          <span className="relative px-3 bg-white text-[11px] font-medium text-slate-400">
-            or sign in with your email
-          </span>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Email Address</label>
@@ -129,13 +98,11 @@ export const Login: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => {
-              setEmail('citizen@citizenassist.local');
-              setPassword('CitizenDemo2026!');
-            }}
+            onClick={handleGuestLogin}
+            disabled={loading}
             className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition border border-slate-200"
           >
-            Fill Demo Citizen Credentials
+            Guest Login
           </button>
         </form>
 
@@ -144,15 +111,6 @@ export const Login: React.FC = () => {
           <Link to="/register" className="text-blue-600 font-semibold hover:underline">
             Register here
           </Link>
-        </div>
-
-        {/* Demo credentials tip */}
-        <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-500">
-          <p className="font-semibold text-slate-700">Hackathon Evaluator / Demo Tip:</p>
-          <p className="mt-0.5">
-            Admin and citizen passwords were randomly generated and written to{' '}
-            <code className="text-blue-700 font-mono">LOCAL_CREDENTIALS.txt</code>.
-          </p>
         </div>
       </div>
     </div>
