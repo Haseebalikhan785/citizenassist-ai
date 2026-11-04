@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import {
   GraduationCap,
   Tractor,
@@ -37,8 +38,19 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 
 export const Landing: React.FC = () => {
   const { t } = useTranslation();
+  const { guestLogin } = useAuth();
+  const navigate = useNavigate();
   const [featuredRecords, setFeaturedRecords] = useState<SchemeRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleGuestTour = async () => {
+    try {
+      await guestLogin();
+      navigate('/dashboard');
+    } catch {
+      navigate('/login');
+    }
+  };
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -87,6 +99,15 @@ export const Landing: React.FC = () => {
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={handleGuestTour}
+              className="w-full sm:w-auto px-7 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm"
+            >
+              <Sparkles className="w-4 h-4 text-emerald-200" />
+              <span>Explore as Guest (HR Demo)</span>
+            </button>
+
             <Link
               to="/schemes"
               className="w-full sm:w-auto px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm"

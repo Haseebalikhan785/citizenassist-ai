@@ -6,7 +6,7 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { useTranslation } from '../i18n';
 
 export const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, guestLogin } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -14,6 +14,19 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await guestLogin();
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to start guest session');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +56,37 @@ export const Login: React.FC = () => {
         </div>
 
         {error && <ErrorMessage message={error} />}
+
+        {/* Fast Guest Access for HR & Evaluators */}
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider mb-2">
+            👔 HR & Evaluator Fast Access
+          </div>
+          <h2 className="text-xs font-bold text-emerald-950 mb-1">
+            Explore Full Sample Layout (No Password Required)
+          </h2>
+          <p className="text-[11px] text-emerald-700 mb-3 leading-relaxed">
+            Instantly tour personalized schemes, benefits, documents checklist, and AI features as a verified citizen.
+          </p>
+          <button
+            type="button"
+            onClick={handleGuestLogin}
+            disabled={loading}
+            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>Continue as Guest Citizen</span>
+          </button>
+        </div>
+
+        <div className="relative my-5 text-center">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <span className="relative px-3 bg-white text-[11px] font-medium text-slate-400">
+            or sign in with your email
+          </span>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

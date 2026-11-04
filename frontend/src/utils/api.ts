@@ -30,6 +30,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   auth: {
+    guest: () =>
+      request<{ access_token: string; user: User }>('/auth/guest', {
+        method: 'POST',
+      }),
     login: (data: { email: string; password: string }) =>
       request<{ access_token: string; user: User }>('/auth/login', {
         method: 'POST',

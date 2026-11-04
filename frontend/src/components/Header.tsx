@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation, Language } from '../i18n';
 
 export const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, guestLogin } = useAuth();
   const { language, setLanguage, t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -13,6 +13,15 @@ export const Header: React.FC = () => {
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+
+  const handleGuestTour = async () => {
+    try {
+      await guestLogin();
+      navigate('/dashboard');
+    } catch (e) {
+      navigate('/login');
+    }
   };
 
   return (
@@ -125,6 +134,15 @@ export const Header: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleGuestTour}
+                  className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm transition flex items-center gap-1.5"
+                  title="Explore full interactive layout as guest"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Guest Tour</span>
+                </button>
                 <Link
                   to="/login"
                   className="px-3 py-1.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-slate-800 rounded-lg transition"
@@ -252,21 +270,34 @@ export const Header: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex gap-2 pt-1">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-medium bg-slate-800 text-slate-200 rounded-lg"
+              <div className="space-y-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleGuestTour();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full text-center py-2 text-sm font-semibold bg-emerald-600 text-white rounded-lg flex items-center justify-center gap-2"
                 >
-                  {t('nav.login')}
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-medium bg-blue-600 text-white rounded-lg"
-                >
-                  {t('nav.register')}
-                </Link>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Explore Sample Layout as Guest</span>
+                </button>
+                <div className="flex gap-2">
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 text-center py-2 text-sm font-medium bg-slate-800 text-slate-200 rounded-lg"
+                  >
+                    {t('nav.login')}
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 text-center py-2 text-sm font-medium bg-blue-600 text-white rounded-lg"
+                  >
+                    {t('nav.register')}
+                  </Link>
+                </div>
               </div>
             )}
           </div>

@@ -55,6 +55,44 @@ def register(data: UserCreate, response: Response, db: Session = Depends(get_db)
     return TokenResponse(access_token=token, token_type="bearer", user=UserResponse.model_validate(user))
 
 
+@router.post("/guest", response_model=TokenResponse)
+def guest_login(response: Response, db: Session = Depends(get_db)):
+    """Create or authenticate a guest evaluator account for HR/recruiter demo access."""
+    guest_email = "guest@citizenassist.local"
+    user = db.query(User).filter(User.email == guest_email).first()
+    if not user:
+        user = User(
+            email=guest_email,
+            hashed_password=hash_password("GuestDemo2026!"),
+            full_name="Guest Evaluator (HR Demo)",
+            role="citizen",
+            language_preference="en",
+            profile_data={
+                "state": "Punjab",
+                "category": "SC",
+                "age": 20,
+                "annual_income": 200000,
+                "gender": "Male",
+                "employment_status": "Student",
+                "is_student": True,
+            },
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    token = create_access_token({"sub": user.id, "role": user.role, "email": user.email})
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        secure=settings.COOKIE_SECURE,
+        max_age=86400,
+    )
+    return TokenResponse(access_token=token, token_type="bearer", user=UserResponse.model_validate(user))
+
+
 @router.post("/login", response_model=TokenResponse)
 def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     """Log in an existing user."""

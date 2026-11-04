@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
+  guestLogin: () => Promise<void>;
   register: (email: string, pass: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   login: async () => {},
+  guestLogin: async () => {},
   register: async () => {},
   logout: async () => {},
   refreshUser: async () => {},
@@ -44,6 +46,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(res.user);
   };
 
+  const guestLogin = async () => {
+    const res = await api.auth.guest();
+    setUser(res.user);
+  };
+
   const register = async (email: string, pass: string, name?: string) => {
     const res = await api.auth.register({ email, password: pass, full_name: name });
     setUser(res.user);
@@ -60,6 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         login,
+        guestLogin,
         register,
         logout,
         refreshUser: fetchCurrentUser,
