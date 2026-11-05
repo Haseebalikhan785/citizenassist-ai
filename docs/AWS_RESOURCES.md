@@ -12,7 +12,7 @@ All resources below were created specifically for this deployment and tagged wit
 
 | Resource Type | Resource Name / ID | Configuration / Details | Monthly Cost (Est.) |
 | :--- | :--- | :--- | :--- |
-| **EC2 Instance** | `i-0906416126aee904e` (`citizenassist-server`) | `t3.small` (x86_64, 2 vCPU, 2 GB RAM), Amazon Linux 2023 (`ami-0f19324397f53458f`), IMDSv2 Required | ~$15.18 |
+| **EC2 Instance** | `i-01a644fae6eefcb3f` (`citizenassist-server`) | `t3.small` (x86_64, 2 vCPU, 2 GB RAM), Amazon Linux 2023 (`ami-0f19324397f53458f`), IMDSv2 Required | ~$15.18 |
 | **EBS Root Volume** | `vol-04146aa27ca2774db` (`citizenassist-volume`) | 20 GB `gp3`, Encrypted with default KMS key | ~$1.60 |
 | **Elastic IP** | `eipalloc-09b482c75046d1bd6` (`13.203.181.152`) | Attached to `i-0906416126aee904e` ($0.005/hr IPv4) | ~$3.65 |
 | **Security Group** | `sg-0b30cea46a352dc6b` (`citizenassist-sg`) | Inbound HTTP port 80 open for web traffic; **Zero SSH (Port 22 closed)** | $0.00 |
@@ -42,7 +42,7 @@ Because inbound SSH is disabled for security, manage the server using AWS System
 ### View Docker Container Logs
 ```bash
 aws ssm send-command \
-  --instance-ids i-0906416126aee904e \
+  --instance-ids i-01a644fae6eefcb3f \
   --document-name "AWS-RunShellScript" \
   --parameters 'commands=["docker logs --tail 100 citizenassist"]' \
   --region ap-south-1
@@ -50,7 +50,7 @@ aws ssm send-command \
 
 ### Start an Interactive Session (Session Manager Shell)
 ```bash
-aws ssm start-session --target i-0906416126aee904e --region ap-south-1
+aws ssm start-session --target i-01a644fae6eefcb3f --region ap-south-1
 ```
 
 ---

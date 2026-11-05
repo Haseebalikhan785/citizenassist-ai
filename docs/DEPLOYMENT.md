@@ -12,7 +12,7 @@ CitizenAssist AI is deployed live on AWS:
 - **Health Check:** `https://13-203-181-152.sslip.io/api/health`
 - **Region:** `ap-south-1` (Mumbai)
 - **Security:** Inbound TLS (Port 443) enabled, automatic Let's Encrypt certificates, `COOKIE_SECURE=true`, zero inbound SSH (Port 22 closed).
-- **Infrastructure:** EC2 `t3.small` instance (`i-0906416126aee904e`), encrypted 20 GB gp3 root volume, Elastic IP (`13.203.181.152`), Docker container with mounted data volume (`/var/lib/citizenassist/data:/app/data`), managed exclusively via AWS Systems Manager (SSM).
+- **Infrastructure:** EC2 `t3.small` instance (`i-01a644fae6eefcb3f`), encrypted 20 GB gp3 root volume, Elastic IP (`13.203.181.152`), Docker container with mounted data volume (`/var/lib/citizenassist/data:/app/data`), managed exclusively via AWS Systems Manager (SSM).
 - **SSM Parameter Store:** Settings stored under `/citizenassist/*`.
 - **Redeployment:** Run `./scripts/aws_deploy.sh` to build and redeploy.
 - **Teardown:** Run `./scripts/aws_teardown.sh` to release all resources after hackathon evaluation.

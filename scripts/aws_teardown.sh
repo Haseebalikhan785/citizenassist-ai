@@ -9,7 +9,7 @@ set -e
 
 REGION="ap-south-1"
 ACCOUNT_ID="287872994029"
-INSTANCE_ID="i-0906416126aee904e"
+INSTANCE_ID="i-01a644fae6eefcb3f"
 EIP_ALLOC="eipalloc-09b482c75046d1bd6"
 SG_ID="sg-0b30cea46a352dc6b"
 BUCKET="citizenassist-deploy-287872994029-ap-south-1"

@@ -8,7 +8,7 @@ set -e
 
 REGION="ap-south-1"
 BUCKET="citizenassist-deploy-287872994029-ap-south-1"
-INSTANCE_ID="i-0906416126aee904e"
+INSTANCE_ID="i-01a644fae6eefcb3f"
 PUBLIC_IP="13.203.181.152"
 
 echo "============================================================"
